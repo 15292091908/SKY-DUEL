@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>苍穹对决 · 房主小世界架构图</title>
+<style>
+  :root {
+    --bg1: #f0f2f5;
+    --ink: #1c2b3a;
+    --ink-2: #5b6b7c;
+    --ink-3: #8a97a5;
+    --line: rgba(28,43,58,.10);
+    --blue: #2563eb;
+    --cyan: #38bdf8;
+    --grad: linear-gradient(135deg,#2563eb,#38bdf8);
+    --red: #ff5340;
+    --green: #12b76a;
+    --amber: #f59e0b;
+    --glass: rgba(255,255,255,.62);
+    --glass-strong: rgba(255,255,255,.82);
+    --shadow: 0 8px 30px rgba(37,99,235,.10), 0 2px 8px rgba(28,43,58,.06);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family:"Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:
+      radial-gradient(1200px 500px at 15% -5%, rgba(56,189,248,.14), transparent 60%),
+      radial-gradient(1000px 460px at 90% 10%, rgba(37,99,235,.12), transparent 55%),
+      var(--bg1);
+    color:var(--ink);
+    min-height:100vh;
+    padding:22px clamp(12px,3vw,40px) 60px;
+  }
+  .wrap { max-width:1180px; margin:0 auto; }
+
+  /* ===== 顶栏 ===== */
+  .topbar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:18px; }
+  .logo {
+    width:44px; height:44px; border-radius:14px; background:var(--grad);
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:22px; box-shadow:0 6px 18px rgba(37,99,235,.35);
+  }
+  .title h1 { font-size:20px; font-weight:800; letter-spacing:.3px; }
+  .title p { font-size:12.5px; color:var(--ink-2); margin-top:2px; }
+  .ver {
+    margin-left:auto; display:flex; gap:8px; align-items:center;
+    background:var(--glass); border:1px solid rgba(255,255,255,.9);
+    backdrop-filter:blur(12px) saturate(1.6); border-radius:999px;
+    padding:7px 16px; font-size:12.5px; font-weight:700; box-shadow:var(--shadow);
+  }
+  .ver .dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 0 3px rgba(18,183,106,.18); }
+
+  /* ===== 控制条 ===== */
+  .ctrl {
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:var(--glass); border:1px solid rgba(255,255,255,.9);
+    backdrop-filter:blur(14px) saturate(1.7); border-radius:16px;
+    padding:10px 14px; box-shadow:var(--shadow); margin-bottom:16px;
+  }
+  .ctrl .grp { display:flex; align-items:center; gap:6px; }
+  .ctrl .lbl { font-size:12px; color:var(--ink-2); font-weight:600; }
+  .btn {
+    border:1px solid rgba(28,43,58,.12); background:#fff; color:var(--ink);
+    border-radius:10px; padding:6px 13px; font-size:12.5px; font-weight:600;
+    cursor:pointer; transition:all .18s; font-family:inherit;
+  }
+  .btn:hover { border-color:var(--blue); color:var(--blue); transform:translateY(-1px); }
+  .btn.on { background:var(--grad); color:#fff; border-color:transparent; box-shadow:0 4px 12px rgba(37,99,235,.3); }
+  .btn.play {
+    min-width:84px; background:var(--grad); color:#fff; border:none;
+    box-shadow:0 4px 14px rgba(37,99,235,.35);
+  }
+  .speed { display:flex; align-items:center; gap:8px; }
+  .speed input[type=range] { width:110px; accent-color:var(--blue); }
+  .speed .sv { font-size:12px; color:var(--blue); font-weight:800; min-width:34px; text-align:right; }
+
+  /* ===== 拓扑区 ===== */
+  .stage {
+    position:relative;
+    background:var(--glass-strong);
+    border:1px solid rgba(255,255,255,.95);
+    backdrop-filter:blur(16px) saturate(1.7);
+    border-radius:24px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    margin-bottom:16px;
+  }
+  .stage svg { display:block; width:100%; height:auto; }
+  .stagetag {
+    position:absolute; top:12px; left:14px; font-size:11.5px; color:var(--ink-3);
+    background:rgba(255,255,255,.7); border:1px solid rgba(28,43,58,.08);
+    border-radius:999px; padding:4px 12px; backdrop-filter:blur(6px); z-index:4;
+  }
+  .legend {
+    position:absolute; bottom:12px; left:14px; display:flex; gap:14px; flex-wrap:wrap;
+    font-size:11.5px; color:var(--ink-2); background:rgba(255,255,255,.75);
+    border:1px solid rgba(28,43,58,.08); border-radius:12px; padding:7px 13px;
+    backdrop-filter:blur(6px); z-index:4;
+  }
+  .legend .item { display:flex; align-items:center; gap:6px; }
+  .legend .sw { width:22px; height:3px; border-radius:3px; }
+  .legend .sw.dotc { width:9px; height:9px; border-radius:50%; }
+
+  /* SVG 内文本 */
+  .svg-msg { font-size:11px; font-weight:700; }
+  .svg-sub { font-size:10px; fill:var(--ink-3); }
+  .node-ply { cursor:pointer; }
+  .node-ply circle.core { fill:#fff; stroke:var(--cyan); stroke-width:2.5; }
+  .node-ply.foe circle.core { stroke:var(--red); }
+  .node-ply text.nm { font-size:13px; font-weight:800; fill:var(--ink); }
+  .node-ply.foe text.nm { fill:var(--red); }
+  .node-ply text.role { font-size:10px; fill:var(--ink-3); }
+
+  /* ===== 面板网格 ===== */
+  .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+  @media (max-width:860px){ .grid{ grid-template-columns:1fr; } }
+  .card {
+    background:var(--glass); border:1px solid rgba(255,255,255,.9);
+    backdrop-filter:blur(14px) saturate(1.7); border-radius:18px;
+    padding:16px 18px; box-shadow:var(--shadow);
+  }
+  .card h2 { font-size:14px; font-weight:800; display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .card h2 .ic { width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; color:#fff; background:var(--grad); flex:none; }
+  .card h2 .ic.red { background:linear-gradient(135deg,#f97316,#ef4444); }
+  .card h2 .ic.green { background:linear-gradient(135deg,#10b981,#14b8a6); }
+  .card h2 .ic.gray { background:linear-gradient(135deg,#64748b,#94a3b8); }
+
+  /* 小世界内部 */
+  .worldbox {
+    border:1.5px dashed rgba(37,99,235,.35); border-radius:14px;
+    background:rgba(56,189,248,.06); padding:10px 12px; margin-bottom:10px;
+  }
+  .worldbox .wt { font-size:11px; font-weight:800; color:var(--blue); margin-bottom:8px; letter-spacing:.4px; }
+  .mirrors { display:flex; gap:8px; flex-wrap:wrap; }
+  .mirror {
+    flex:1 1 100px; background:#fff; border:1px solid var(--line); border-radius:10px;
+    padding:7px 9px; min-width:88px;
+  }
+  .mirror .mname { font-size:11px; font-weight:700; display:flex; align-items:center; gap:5px; }
+  .mirror .mname .bdg { font-size:9px; padding:1px 6px; border-radius:6px; color:#fff; font-weight:700; }
+  .mirror .mhp { font-size:10px; color:var(--ink-3); margin-top:3px; display:flex; justify-content:space-between; }
+  .mirror .bar { height:4px; background:#eef2f6; border-radius:3px; margin-top:4px; overflow:hidden; }
+  .mirror .bar i { display:block; height:100%; border-radius:3px; background:var(--green); }
+
+  .flowrow { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px dashed var(--line); font-size:12px; }
+  .flowrow:last-child { border-bottom:none; }
+  .flowrow .dir { font-weight:800; font-size:11.5px; white-space:nowrap; }
+  .flowrow .dir.up { color:var(--blue); }
+  .flowrow .dir.down { color:var(--green); }
+  .flowrow .dir.hop { color:var(--amber); }
+  .flowrow .msg { flex:1; line-height:1.5; }
+  .flowrow .msg b { font-weight:700; }
+  .flowrow .msg span { color:var(--ink-2); }
+  .flowrow .freq { font-size:10.5px; color:var(--ink-3); white-space:nowrap; }
+
+  /* 规则清单 */
+  .rule { display:flex; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line); }
+  .rule:last-child { border-bottom:none; }
+  .rule .rk {
+    flex:none; width:22px; height:22px; border-radius:7px; font-size:11px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; color:#fff; background:var(--grad);
+  }
+  .rule .rk.green { background:linear-gradient(135deg,#10b981,#14b8a6); }
+  .rule .rk.red { background:linear-gradient(135deg,#f97316,#ef4444); }
+  .rule .rk.gray { background:linear-gradient(135deg,#64748b,#94a3b8); }
+  .rule .rt { font-size:12.5px; line-height:1.6; }
+  .rule .rt b { font-weight:700; }
+  .rule .rt .tag {
+    display:inline-block; font-size:10px; font-weight:700; padding:1px 7px; border-radius:6px;
+    margin-left:4px; vertical-align:1px;
+  }
+  .tag.blue { background:rgba(37,99,235,.1); color:var(--blue); }
+  .tag.green { background:rgba(18,183,106,.1); color:var(--green); }
+  .tag.red { background:rgba(255,83,64,.1); color:var(--red); }
+  .tag.amber { background:rgba(245,158,11,.12); color:var(--amber); }
+
+  .foot { text-align:center; font-size:11px; color:var(--ink-3); margin-top:16px; }
+
+  /* 消息气泡 */
+  .bubble {
+    position:absolute; pointer-events:none; border-radius:999px;
+    font-size:10px; font-weight:800; color:#fff; padding:3px 9px;
+    white-space:nowrap; box-shadow:0 4px 12px rgba(28,43,58,.25); z-index:5;
+    transform:translate(-50%,-50%);
+  }
+  .bubble.up { background:linear-gradient(135deg,#2563eb,#38bdf8); }
+  .bubble.down { background:linear-gradient(135deg,#12b76a,#14b8a6); }
+  .bubble.evt { background:linear-gradient(135deg,#f59e0b,#f97316); }
+  .selring { stroke:transparent; stroke-width:3; fill:none; }
+  .selring.on { stroke:var(--amber); stroke-dasharray:6 5; animation:spin 9s linear infinite; }
+  @keyframes spin { to { stroke-dashoffset:-110; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 顶栏 -->
+  <div class="topbar">
+    <div class="logo">🛩</div>
+    <div class="title">
+      <h1>苍穹对决 · 房主小世界架构图</h1>
+      <p>Host Mini-World — 星型拓扑 · 房主权威 · 本地预判 + 权威回溯</p>
+    </div>
+    <div class="ver"><span class="dot"></span>架构 v2.2.1</div>
+  </div>
+
+  <!-- 控制条 -->
+  <div class="ctrl">
+    <div class="grp"><button class="btn play" id="btnPlay">⏸ 暂停</button></div>
+    <div class="grp">
+      <span class="lbl">模式</span>
+      <button class="btn on" data-size="1v1">1v1</button>
+      <button class="btn" data-size="3v3">3v3</button>
+      <button class="btn" data-size="5v5">5v5</button>
+    </div>
+    <div class="grp">
+      <span class="lbl">消息流速</span>
+      <span class="speed">
+        <input type="range" id="speed" min="0.25" max="3" step="0.25" value="1">
+        <span class="sv" id="speedVal">1.0×</span>
+      </span>
+    </div>
+    <div class="grp" style="margin-left:auto">
+      <span class="lbl" id="sizeHint">1v1 · 共 2 人 · 房主 + 1 连接</span>
+    </div>
+  </div>
+
+  <!-- 拓扑舞台 -->
+  <div class="stage" id="stage">
+    <div class="stagetag">星型拓扑：所有人只与房主直连 · 无 P2P</div>
+    <svg id="topoSvg" viewBox="0 0 1100 640" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="hostGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#38bdf8"/>
+        </linearGradient>
+        <marker id="arrUp" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#38bdf8"/>
+        </marker>
+        <marker id="arrDown" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#12b76a"/>
+        </marker>
+      </defs>
+      <g id="topoG"></g>
+    </svg>
+    <div class="legend">
+      <div class="item"><span class="sw" style="background:#38bdf8"></span>upd 上报（非房主→房主）</div>
+      <div class="item"><span class="sw" style="background:#12b76a"></span>sync 快照（房主→所有人）</div>
+      <div class="item"><span class="sw" style="background:linear-gradient(90deg,#f59e0b,#f97316)"></span>事件消息 fire / blt / hitRep / dmgReject / rEnd / matchEnd / round / died / ping</div>
+      <div class="item"><span class="sw" style="background:linear-gradient(90deg,#a78bfa,#8b5cf6)"></span>voice 语音（T 开麦发房主 / 房主转发广播，state 通道）</div>
+      <div class="item"><span class="sw dotc" style="background:#fff;border:2px solid #ef4444"></span>敌队玩家</div>
+      <div class="item"><span class="sw dotc" style="background:#fff;border:2px solid #38bdf8"></span>友队玩家</div>
+    </div>
+  </div>
+
+  <!-- 面板 -->
+  <div class="grid">
+
+    <!-- 房主小世界内部 -->
+    <div class="card">
+      <h2><span class="ic">🏠</span>房主设备 · 小世界内部</h2>
+      <div class="worldbox">
+        <div class="wt">小世界实体镜像（房主本地模拟所有人）</div>
+        <div class="mirrors" id="mirrors"></div>
+      </div>
+      <div class="flowrow"><span class="dir down">◀ 权威裁决</span><div class="msg"><b>命中 / 伤害 / 死亡 / 撞地 / 出海 / 回合 / 比分 / 胜利</b><br><span>房主在小世界内统一计算，非房主端不参与结算</span></div><span class="freq">本地</span></div>
+      <div class="flowrow"><span class="dir down">◀ 延迟补偿</span><div class="msg">命中判定时对方<b>位置上报过期</b>则跳过命中：<b>飞机 &gt;350ms</b>、<b>防空车 &gt;400ms</b><br><span>避免超高延迟下"本地看到的位置"与"实际位置"差太远</span></div><span class="freq">房主端</span></div>
+      <div class="flowrow"><span class="dir down">◀ 状态同步器</span><div class="msg"><b>sync</b>：组装全部玩家位置/朝向/血量/存活 + 队伍比分 s0/s1 + 局号 rn + 回合结束 over，推送给所有人；<b>已确认的本地预判自动对账</b>；rn 落后的乱序旧快照整段跳过（防局号回退与二次重置）</div><span class="freq">20Hz</span></div>
+    </div>
+
+    <!-- 消息协议 -->
+    <div class="card">
+      <h2><span class="ic green">✉️</span>消息协议（全部经房主）</h2>
+      <div class="flowrow"><span class="dir up">▲ upd</span><div class="msg"><b>位置 / 朝向</b><br><span>非房主 → 房主，更新小世界镜像并做撞地/出海权威判死</span></div><span class="freq">20Hz · state</span></div>
+      <div class="flowrow"><span class="dir up">▲ fire</span><div class="msg"><b>开火上报（fid 对账号 + 弹道参数 s/dm/sl）</b><br><span>非房主 → 房主，按开火者实际速度/伤害/溅射重建子弹，权威弹道与本地一致</span></div><span class="freq">事件 · event</span></div>
+      <div class="flowrow"><span class="dir up">▲ hitRep</span><div class="msg"><b>命中上报 {fid, 目标id, 命中点位置, 伤害}</b><br><span>非房主命中后上报；房主信任窗口：子弹到上报点 22m 内且上报点距目标现位置 &lt;60m（防瞬移谎报）→ 信任结算</span></div><span class="freq">事件 · event</span></div>
+      <div class="flowrow"><span class="dir down">▼ sync</span><div class="msg"><b>权威快照（位置/血量/存活/比分 s0/s1/局号 rn/回合结束 over）</b><br><span>已确认的预判自动对账；<b>rn 落后的旧快照整段跳过</b>（防局号回退/二次重置）</span></div><span class="freq">20Hz · state</span></div>
+      <div class="flowrow"><span class="dir down">▼ blt</span><div class="msg"><b>子弹广播（带 s/dm/sl）</b><br><span>房主转发给其他非房主：本地显示 + 被击中预判；开火者凭 from 字段跳过防重复</span></div><span class="freq">事件 · event</span></div>
+      <div class="flowrow"><span class="dir down">▼ dmgReject</span><div class="msg"><b>否决回溯（220ms 延迟否决）</b><br><span>子弹消失后等 hitRep 220ms，过期才否决；已否决 fid 记入黑名单 5s，迟到 hitRep 不双结算</span></div><span class="freq">事件 · event</span></div>
+      <div class="flowrow"><span class="dir up">▲ envDmg / crash / died</span><div class="msg"><b>环境伤害 / 碰撞 / 本地死亡上报</b><br><span>撞地·出界扣血、轻撞 dmg、fatal 相撞（去重键）——权威结算；<b>非房主坠地/出海/自毁也上报 died</b>，房主权威对齐防永久幽灵分歧</span></div><span class="freq">事件 · event</span></div>
+      <div class="flowrow"><span class="dir down">▼ rEnd / round</span><div class="msg"><b>回合结果（rn + s0/s1 + 胜方 w）/ 回合推进</b><br><span>非房主按 w 显示 回合胜利/失败/同归于尽 横幅+音效（与房主一致）；按 rn 幂等重置实体进入下一回合；sync 的 rn 超前同样兜底</span></div><span class="freq">事件 · event</span></div>
+      <div class="flowrow"><span class="dir down">▼ matchEnd</span><div class="msg"><b>终局判定（win + s0/s1）</b><br><span>win 是<b>房主视角</b>：非房主用 s0/s1 按本地阵营换算胜负（比分缺失才兜底取反）——杜绝"双方都看到最终胜利"</span></div><span class="freq">事件 · event</span></div>
+      <div class="flowrow"><span class="dir down">▼ ping / pong</span><div class="msg"><b>延迟测量（回声法）</b><br><span>非房主发 ping(本地时间戳) → 房主原样回 pong → 非房主用<b>自己的时钟</b>算 RTT（两端 performance.now() 基准不同，不能直接相减）；房主不显示 ping</span></div><span class="freq">0.5Hz · event</span></div>
+      <div class="flowrow"><span class="dir down">▼ kstat（定向）</span><div class="msg"><b>权威击杀台账（每 3s 发给对应的人）</b><br><span>房主小世界裁决每次死亡时记台账"谁击杀了谁"（子弹归因开火者 / 相撞互记 / 环境·自毁只记阵亡），汇总成 {击杀 k, 阵亡 d} 定向下发；<b>击杀数以台账为权威覆盖</b>，本地预判 +1 只做即时反馈——被 dmgReject 否决的"预判击杀"在 ≤3s 内自动纠正（不再只增不减）</span></div><span class="freq">0.33Hz · event</span></div>
+      <div class="flowrow"><span class="dir hop">◈ pickList（定向）</span><div class="msg"><b>阵营定向分配</b><br><span>选满后房主对每人单独发送"你的队友/对手"视角（例：对玩家A → B是队友、C是对手），确认收到即就绪，<b>无需玩家间校验</b>；掉线强制完成时重发（pickRound 幂等）</span></div><span class="freq">开局前</span></div>
+      <div class="flowrow"><span class="dir up" style="background:linear-gradient(180deg,#a78bfa,#8b5cf6)">▲ voice</span><div class="msg"><b>语音上行（T 键开麦，定向发房主）</b><br><span>16kHz 单声道 Int16、40ms/包（640 采样）、JSON 内 base64（净荷 ~32KB/s）——只走 state 通道（不可靠不保序零重传，语音容忍丢包但要低延迟）</span></div><span class="freq">25包/s · state</span></div>
+      <div class="flowrow"><span class="dir down" style="background:linear-gradient(180deg,#a78bfa,#8b5cf6)">▼ voice 转发</span><div class="msg"><b>房主转发广播（跳过发送者防回声）+ 本地播放</b><br><span>星型中继：非房主 nets 只有房主一条 → 结构上天然定向、永远听不到自己；接收端 seq + 80ms 重排窗抖动缓冲（丢包跳过不阻塞，积压 &gt;400ms 丢弃保时效）；<b>Y 键关收音 = 转发义务照尽、本地不播</b></span></div><span class="freq">实时 · state</span></div>
+    </div>
+
+    <!-- 本地预判与权威回溯 -->
+    <div class="card">
+      <h2><span class="ic gray">⚡</span>本地预判 + 权威回溯（市售网游模式）</h2>
+      <div class="rule">
+        <div class="rk">1</div>
+        <div class="rt"><b>伤害/碰撞本地预判</b>：命中先扣血（即时反馈）+ 特效/击杀提示，同时上报 hitRep（带命中瞬间目标位置）<span class="tag blue">预判</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk green">2</div>
+        <div class="rt"><b>信任命中（延迟补偿）</b>：房主登记上报点，子弹飞抵上报点 22m 内且距目标现位置 &lt;60m（防瞬移谎报）→ 按上报结算；子弹已消失但未真实命中 → 220ms 窗口内宽容结算<span class="tag green">补偿</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk red">3</div>
+        <div class="rt"><b>房主否决 → 立即回溯</b>：子弹未命中任何目标而消失 → 延迟 220ms 等 hitRep，过期下发 <b>dmgReject</b>，开火者立即恢复预判扣掉的血量；已否决 fid 拉黑 5s 防迟到上报双结算<span class="tag red">回溯</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk">4</div>
+        <div class="rt"><b>被打对账三层纠错</b>：sync 里已下降的血量 = 已确认预判（自动对账）；未被确认的预判继续预挂；<b>400ms 无权威确认 → 超时回滚</b>，sync 到达后自愈<span class="tag blue">对账</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk gray">5</div>
+        <div class="rt"><b>死亡权威判定 + 本地即时例外</b>：死亡由房主判定后经 sync 推回；例外：撞海/撞地/出海<b>本地即时判死</b>（体感瞬时反馈），同时上报 died 让权威对齐——否则"本地已死/房主认为存活"会永久幽灵分歧<span class="tag gray">例外</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk green">6</div>
+        <div class="rt"><b>复合键防撞号</b>：fid 各玩家独立计数，房主侧一律用 <b>"发送者id:fid"</b> 复合键（fireBullets / 已否决表 / 待否决队列），跨玩家 fid 撞号不会串账<span class="tag green">防串</span></div>
+      </div>
+    </div>
+
+    <!-- 对局全流程时序 -->
+    <div class="card">
+      <h2><span class="ic green">🎬</span>对局全流程（进入 → 赢/输回合 → 终局）</h2>
+      <div class="rule">
+        <div class="rk">1</div>
+        <div class="rt"><b>进入游戏</b>：1v1 房主选图广播 'map'；3v3/5v5 与 aavs 走 选阵营 → pickList 定向发放 → 全员 ready → 'go'。两端各自 beginMatch：清空比分、按 roster 建实体、nextRound(1)（'round' rn 幂等，双发不重复重置）<span class="tag blue">开局</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk green">2</div>
+        <div class="rt"><b>赢回合</b>：房主小世界判全歼 → 0.8s 淘汰宽限窗（防同时击杀误判）→ settleRound：s0/s1++ → 广播 <b>rEnd{rn, s0, s1, w}</b> → 3.2s 后 nextRound 广播 'round'。非房主：rEnd 同步比分 + 按 w 显示横幅/音效，'round' 幂等重置实体<span class="tag green">权威</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk red">3</div>
+        <div class="rt"><b>输回合 / 平局</b>：同一条 rEnd 链路，w = 对方队伍 → 本地显示"回合失败"；双归零 w=-1 → "双方同归于尽 · 不计分"。比分以队伍比分 s0/s1 为唯一真相，本地视角换算显示<span class="tag red">对齐</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk">4</div>
+        <div class="rt"><b>终局</b>：任一队 s≥3 → 房主 matchOver 广播 <b>matchEnd{win, s0, s1}</b>；非房主按 s0/s1 换算自己的胜负（修掉"win 是房主视角"导致双方都看到胜利的 bug）→ 显示 最终胜利/惜败 + 总比分 → 可点重赛<span class="tag blue">终局</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk green">5</div>
+        <div class="rt"><b>重赛</b>：任一方点重赛 → 广播 'rematch' → 双方 applyRematch（比分/局号清零，nextRound 从第 1 局重新开始）；对手已全部离开则拒绝重赛防空转<span class="tag green">循环</span></div>
+      </div>
+    </div>
+
+    <!-- 掉线处理 -->
+    <div class="card">
+      <h2><span class="ic red">📡</span>掉线处理（全阶段覆盖）</h2>
+      <div class="rule">
+        <div class="rk">1</div>
+        <div class="rt"><b>凑人阶段</b>：非房主视角任何连接断开 = 房主掉线（覆盖 hostPeerId 未赋值的角落）→ 提示后返回菜单；房主侧掉人 → 重算 netSize + 重发 roster，"已连接 x/y" 实时刷新<span class="tag amber">开局前</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk red">2</div>
+        <div class="rt"><b>选阵营 / 等就绪掉线</b>：无重连机制，等"重新连接"会永远卡死 → 房主<b>强制完成选阵营</b>：已选的保留、未选的自动补到人少的队（允许 3v2 不对称）→ 重发 pickList（pickRound 幂等）→ 就绪达标立即开局<span class="tag red">续局</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk">3</div>
+        <div class="rt"><b>奇数人数防死锁</b>：掉线后 5/7/9 人时两队容量 floor/ceil 不对称（如 2/3）；旧版两队同容量会导致总容量 &lt; 人数 → 选阵营永远凑不齐<span class="tag red">修复</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk gray">4</div>
+        <div class="rt"><b>对局中非房主掉线</b>：房主清理实体 + 广播 peerGone 各端同步清理幽灵；<b>对手全掉线 → 双端各自独立判定"比赛结束 · 最终胜利"</b>（非房主也感知，不再瞪空地图）；部分掉线 → 视为阵亡走正常回合结算<span class="tag green">权威</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk red">5</div>
+        <div class="rt"><b>对局中房主掉线</b>：星型根断 → 非房主立即结束比赛按阵营判胜负，隐藏重赛按钮（房主不在无法重赛）<span class="tag red">全员</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk">6</div>
+        <div class="rt"><b>断线归因（中性文案）</b>：WebRTC onClose 双向触发，本端无法区分"对端离线"与"自己断网" → 一律中性提示两种可能；<b>navigator.onLine=false / offline 事件</b>是唯一可靠判据（浏览器自己知道断网），即时提示"你的网络连接已断开"避免冤枉对方<span class="tag blue">归因</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk gray">7</div>
+        <div class="rt"><b>回合间隙 / 终局面板掉线</b>：3.2s 回合结算窗口内掉线 → 同对局规则处理；终局面板掉人仅清理实体，重赛按钮有 hasOpponent 守卫防空转<span class="tag gray">兜底</span></div>
+      </div>
+      <div class="rule">
+        <div class="rk green">8</div>
+        <div class="rt"><b>大厅冻结兜底</b>：非房主 60s 无进展 → "主机长时间未响应"返回菜单（正常掉线由 onClose 秒级处理；兜底不可提前抢跑开局，否则会丢弃 pickList 导致阵营/地图错乱）<span class="tag green">兜底</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">苍穹对决 Sky Duel · 房主小世界架构示意 v2.2.1 · 点击外围玩家节点可高亮该玩家的完整消息流 · 可切换 1v1 / 3v3 / 5v5 观察连接数变化 · 联机中按 T 开/关麦克风、Y 开/关收音（四态独立）</div></div>
+
+<script>
+(() => {
+  'use strict';
+  /* ================= 配置 ================= */
+  const SIZE_META = {
+    '1v1': { players: 1, foes: 1, label: '1v1 · 共 2 人 · 房主 + 1 连接' },
+    '3v3': { players: 5, foes: 3, label: '3v3 · 共 6 人 · 房主 + 5 连接' },
+    '5v5': { players: 9, foes: 5, label: '5v5 · 共 10 人 · 房主 + 9 连接' }
+  };
+  const CX = 550, CY = 380;      // 房主中心（SVG viewBox 坐标）
+  const VB_W = 1100;             // viewBox 宽
+  const VB_H = 640;              // viewBox 高
+  const HOST_R = 58;             // 房主节点半径
+  const PLY_R = 28;              // 玩家节点半径
+  const ORBIT_RX = 430;          // 玩家椭圆轨道水平半径
+  const ORBIT_RY = 230;          // 玩家椭圆轨道垂直半径（更扁，符合 SVG 宽高比）
+
+  let size = '1v1';
+  let playing = true;
+  let speed = 1;
+  let hlIdx = -1;
+  const STATIC = /[?&]static\b/.test(location.search);   // ?static 静态模式（禁用动画，便于截图/分享）
+
+  const svg = document.getElementById('topoSvg');
+  const topoG = document.getElementById('topoG');   // 节点绘制图层（innerHTML 清空时保留 <defs> 渐变定义）
+  const NS = 'http://www.w3.org/2000/svg';
+  const stageBox = document.getElementById('stage');
+  let bubbles = [];          // 当前气泡元素
+  let timers = [];           // 消息生成定时器
+  let raf = 0;
+
+  // SVG viewBox 坐标 → 舞台像素坐标
+  const px = (x) => x * (stageBox.clientWidth / VB_W);
+
+  /* ================= 节点绘制 ================= */
+  function addHostNode() {
+    const g = document.createElementNS(NS, 'g');
+    for (let i = 3; i >= 1; i--) {
+      const halo = document.createElementNS(NS, 'circle');
+      halo.setAttribute('cx', CX); halo.setAttribute('cy', CY);
+      halo.setAttribute('r', 60 + i * 13);
+      halo.setAttribute('fill', 'none');
+      halo.setAttribute('stroke', i === 1 ? 'rgba(37,99,235,.25)' : 'rgba(56,189,248,.12)');
+      halo.setAttribute('stroke-width', i === 1 ? 2 : 1);
+      g.appendChild(halo);
+    }
+    const core = document.createElementNS(NS, 'circle');
+    core.setAttribute('cx', CX); core.setAttribute('cy', CY); core.setAttribute('r', 58);
+    core.setAttribute('fill', 'url(#hostGrad)');
+    g.appendChild(core);
+    const t1 = document.createElementNS(NS, 'text');
+    t1.setAttribute('x', CX); t1.setAttribute('y', CY - 12);
+    t1.setAttribute('text-anchor', 'middle'); t1.setAttribute('fill', '#fff');
+    t1.setAttribute('font-size', '20px'); t1.textContent = '🛩';
+    g.appendChild(t1);
+    const t2 = document.createElementNS(NS, 'text');
+    t2.setAttribute('x', CX); t2.setAttribute('y', CY + 14);
+    t2.setAttribute('text-anchor', 'middle'); t2.setAttribute('fill', '#fff');
+    t2.setAttribute('font-size', '13px'); t2.setAttribute('font-weight', '800');
+    t2.textContent = '房主';
+    g.appendChild(t2);
+    const t3 = document.createElementNS(NS, 'text');
+    t3.setAttribute('x', CX); t3.setAttribute('y', CY + 31);
+    t3.setAttribute('text-anchor', 'middle'); t3.setAttribute('fill', 'rgba(255,255,255,.85)');
+    t3.setAttribute('font-size', '10px'); t3.textContent = '小世界';
+    g.appendChild(t3);
+    topoG.appendChild(g);
+  }
+
+  function addPlayerNode(idx, total, isFoe) {
+    let x, y;
+    if (total === 1) {
+        // 1v1：玩家放在房主正下方稍偏，避开房主节点
+        x = CX;
+        y = CY + 215;   // 380+215=595 < 640(viewBox 高) - PLY_R(28) = 612 ✓
+    } else {
+        // 多玩家：均匀分布在椭圆上半弧（视觉上等间距，不堆叠）
+        // 等 x 间距保证横向分布均匀；y 按椭圆上半弧计算，保证不挡房主
+        const halfSpan = ORBIT_RX * 0.94;   // x 跨度占椭圆水平半径的 94%
+        const xMin = CX - halfSpan;
+        const xMax = CX + halfSpan;
+        x = xMin + idx * ((xMax - xMin) / (total - 1));
+        const norm = (x - CX) / ORBIT_RX;
+        const sqrtSafe = Math.sqrt(Math.max(0, 1 - norm * norm));
+        y = CY - sqrtSafe * ORBIT_RY;       // 上半椭圆（SVG y 向上为负）
+    }
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'node-ply' + (isFoe ? ' foe' : ''));
+    g.setAttribute('data-idx', idx);
+    g.setAttribute('transform', 'translate(' + x + ',' + y + ')');
+
+    const ring = document.createElementNS(NS, 'circle');
+    ring.setAttribute('r', 36); ring.setAttribute('class', 'selring');
+    ring.setAttribute('id', 'ring' + idx);
+    g.appendChild(ring);
+
+    const core = document.createElementNS(NS, 'circle');
+    core.setAttribute('class', 'core'); core.setAttribute('cx', 0); core.setAttribute('cy', 0);
+    core.setAttribute('r', 28);
+    g.appendChild(core);
+
+    const emo = document.createElementNS(NS, 'text');
+    emo.setAttribute('y', -2); emo.setAttribute('text-anchor', 'middle');
+    emo.setAttribute('font-size', '19px');
+    emo.textContent = isFoe ? '✈' : '🛡';
+    g.appendChild(emo);
+
+    const nm = document.createElementNS(NS, 'text');
+    nm.setAttribute('class', 'nm'); nm.setAttribute('y', 27); nm.setAttribute('text-anchor', 'middle');
+    nm.textContent = '玩家 ' + String.fromCharCode(65 + idx);
+    g.appendChild(nm);
+
+    const role = document.createElementNS(NS, 'text');
+    role.setAttribute('class', 'role'); role.setAttribute('y', 42); role.setAttribute('text-anchor', 'middle');
+    role.textContent = isFoe ? '敌队 · 飞机' : '友队 · 防空车';
+    g.appendChild(role);
+
+    const local = document.createElementNS(NS, 'text');
+    local.setAttribute('x', 30); local.setAttribute('y', -28);
+    local.setAttribute('text-anchor', 'middle'); local.setAttribute('font-size', '9px');
+    local.setAttribute('font-weight', '700'); local.setAttribute('fill', isFoe ? '#ff5340' : '#38bdf8');
+    local.textContent = '本地预判';
+    g.appendChild(local);
+
+    g.addEventListener('click', () => toggleHighlight(idx));
+    topoG.appendChild(g);
+    return { x, y, isFoe };
+  }
+
+  /* ================= 连线 ================= */
+  function addLinks(nodes) {
+    nodes.forEach((n, i) => {
+      const base = document.createElementNS(NS, 'line');
+      base.setAttribute('x1', CX); base.setAttribute('y1', CY);
+      base.setAttribute('x2', n.x); base.setAttribute('y2', n.y);
+      base.setAttribute('stroke', 'rgba(28,43,58,.13)'); base.setAttribute('stroke-width', 2);
+      topoG.appendChild(base);
+
+      const up = document.createElementNS(NS, 'line');
+      up.setAttribute('x1', n.x); up.setAttribute('y1', n.y);
+      up.setAttribute('x2', CX); up.setAttribute('y2', CY);
+      up.setAttribute('stroke', '#38bdf8'); up.setAttribute('stroke-width', 2.2);
+      up.setAttribute('marker-end', 'url(#arrUp)'); up.setAttribute('opacity', .75);
+      topoG.appendChild(up);
+
+      const down = document.createElementNS(NS, 'line');
+      down.setAttribute('x1', CX); down.setAttribute('y1', CY);
+      down.setAttribute('x2', n.x); down.setAttribute('y2', n.y);
+      down.setAttribute('stroke', '#12b76a'); down.setAttribute('stroke-width', 2.2);
+      down.setAttribute('marker-end', 'url(#arrDown)'); down.setAttribute('opacity', .75);
+      topoG.appendChild(down);
+
+      // 标签：根据角度选择水平/垂直错开方向（避免多条连线的中点标签堆叠）
+      const dx = n.x - CX, dy = n.y - CY;
+      const horiz = Math.abs(dx) > Math.abs(dy);    // 主要水平 / 主要垂直
+      const angNorm = Math.atan2(dy, dx);            // 节点相对房主角度
+      // 标签放在连线中点、垂直于连线方向偏移 ~22px
+      const off = 24;
+      const px2 = -Math.sin(angNorm) * off;
+      const py2 = Math.cos(angNorm) * off;
+      const mx = (CX + n.x) / 2 + px2;
+      const my = (CY + n.y) / 2 + py2;
+      const anchor = (mx > CX) ? 'start' : 'end';
+      // 标签背景：让文字清晰可读
+      const mk = (txt, cls, fill, dx, dy, anchor) => {
+        const t = document.createElementNS(NS, 'text');
+        t.setAttribute('class', cls);
+        t.setAttribute('fill', fill);
+        t.setAttribute('x', mx + dx); t.setAttribute('y', my + dy);
+        t.setAttribute('text-anchor', anchor);
+        // 描边提高可读性
+        t.setAttribute('stroke', 'rgba(255,255,255,.85)');
+        t.setAttribute('stroke-width', '3'); t.setAttribute('paint-order', 'stroke fill');
+        t.setAttribute('font-weight', '700');
+        t.textContent = txt;
+        topoG.appendChild(t);
+      };
+      mk('fire · blt · ping', 'svg-msg', '#f59e0b', 0, -16, anchor);
+      mk('upd', 'svg-msg', '#2563eb', 0, 0, anchor);
+      mk('20Hz', 'svg-sub', '#5b6b7c', 0, 12, anchor);
+      mk('sync', 'svg-msg', '#12b76a', 0, 28, anchor);
+      mk('20Hz', 'svg-sub', '#5b6b7c', 0, 40, anchor);
+    });
+  }
+
+  /* ================= 消息粒子 ================= */
+  function mkBubble(text, cls) {
+    const b = document.createElement('div');
+    b.className = 'bubble ' + cls;
+    b.textContent = text;
+    stageBox.appendChild(b);
+    bubbles.push(b);
+    return b;
+  }
+  function animBubble(b, x0, y0, x1, y1, dur) {
+    const t0 = performance.now();
+    b._step = (now) => {
+      const p = Math.min(1, (now - t0) / dur);
+      const e = p * p * (3 - 2 * p);            // easeInOut
+      b.style.left = px(x0 + (x1 - x0) * e) + 'px';
+      b.style.top  = px(y0 + (y1 - y0) * e) + 'px';
+      if (p >= 1) { b.remove(); return true; }
+      return false;
+    };
+  }
+  function startFlow(nodes) {
+    const dur = () => 620 / speed;
+    // 气泡频率随玩家数自适应（保持总体密度一致）
+    const updPeriod = Math.max(40, 50 + nodes.length * 8);
+    const syncPeriod = updPeriod;
+    // upd：玩家 → 房主
+    timers.push(setInterval(() => {
+      if (!playing) return;
+      nodes.forEach(n => {
+        const b = mkBubble('upd', 'up');
+        animBubble(b, n.x, n.y, CX, CY, dur());
+      });
+    }, updPeriod / speed));
+    // sync：房主 → 玩家
+    timers.push(setInterval(() => {
+      if (!playing) return;
+      nodes.forEach(n => {
+        const b = mkBubble('sync', 'down');
+        animBubble(b, CX, CY, n.x, n.y, dur());
+      });
+    }, syncPeriod / speed));
+    // 事件消息（随机玩家）
+    timers.push(setInterval(() => {
+      if (!playing || !nodes.length) return;
+      const n = nodes[Math.floor(Math.random() * nodes.length)];
+      const up = Math.random() < 0.5;
+      const b = mkBubble(up ? 'fire' : 'blt', 'evt');
+      if (up) animBubble(b, n.x, n.y, CX, CY, 700 / speed);
+      else animBubble(b, CX, CY, n.x, n.y, 700 / speed);
+    }, 1200 / speed));
+  }
+
+  function tick(now) {
+    bubbles = bubbles.filter(b => !(b._step && b._step(now)));
+    raf = requestAnimationFrame(tick);
+  }
+
+  /* ================= 高亮 ================= */
+  function toggleHighlight(idx) {
+    for (let i = 0; i < SIZE_META[size].players; i++) {
+      const r = document.getElementById('ring' + i);
+      if (r) r.setAttribute('class', 'selring');
+    }
+    if (hlIdx === idx) { hlIdx = -1; return; }
+    hlIdx = idx;
+    const r = document.getElementById('ring' + idx);
+    if (r) r.setAttribute('class', 'selring on');
+  }
+
+  /* ================= 小世界镜像 ================= */
+  function renderMirrors() {
+    const box = document.getElementById('mirrors');
+    box.innerHTML = '';
+    const meta = SIZE_META[size];
+    const mk = (name, foe, hp, type, dead) => {
+      const d = document.createElement('div');
+      d.className = 'mirror';
+      d.innerHTML =
+        '<div class="mname"><span>' + type + '</span><span class="bdg" style="background:' + (foe ? '#ff5340' : '#38bdf8') + '">' + (foe ? '敌' : '友') + '</span></div>' +
+        '<div class="mhp"><span>' + name + '</span><span>' + (dead ? '✝ 阵亡' : (hp + ' HP')) + '</span></div>' +
+        '<div class="bar"><i style="width:' + (dead ? 0 : hp) + '%;background:' + (hp <= 30 ? '#f59e0b' : '#12b76a') + '"></i></div>';
+      box.appendChild(d);
+    };
+    mk('房主（我）', false, 100, '🛩 飞机', false);
+    for (let i = 0; i < meta.players; i++) {
+      const foe = i >= meta.players - meta.foes;
+      mk('玩家 ' + String.fromCharCode(65 + i), foe, foe ? (i % 2 ? 100 : 62) : 100, foe ? '✈ 飞机' : '🛡 防空车', foe && i === 2);
+    }
+  }
+
+  /* ================= 渲染 ================= */
+  function render() {
+    topoG.innerHTML = '';
+    bubbles.forEach(b => b.remove());
+    bubbles = [];
+    timers.forEach(t => clearInterval(t));
+    timers = [];
+    if (raf) cancelAnimationFrame(raf);
+    hlIdx = -1;
+
+    addHostNode();
+    const meta = SIZE_META[size];
+    const nodes = [];
+    for (let i = 0; i < meta.players; i++) {
+      nodes.push(addPlayerNode(i, meta.players, i >= meta.players - meta.foes));
+    }
+    addLinks(nodes);
+    renderMirrors();
+    document.getElementById('sizeHint').textContent = meta.label;
+    if (STATIC) return;   // 静态模式：不启动动画（截图/分享用）
+    startFlow(nodes);
+    raf = requestAnimationFrame(tick);
+  }
+
+  /* ================= 控件 ================= */
+  document.querySelectorAll('.ctrl .btn[data-size]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.ctrl .btn[data-size]').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      size = btn.dataset.size;
+      render();
+    });
+  });
+  document.getElementById('btnPlay').addEventListener('click', () => {
+    playing = !playing;
+    document.getElementById('btnPlay').textContent = playing ? '⏸ 暂停' : '▶ 播放';
+  });
+  document.getElementById('speed').addEventListener('input', (e) => {
+    speed = parseFloat(e.target.value);
+    document.getElementById('speedVal').textContent = speed.toFixed(2).replace(/\.?0+$/, '') + '×';
+  });
+  window.addEventListener('resize', () => {});   // px() 每次动态计算，无需处理
+
+  render();
+})();
+</script>
+</body>
+</html>

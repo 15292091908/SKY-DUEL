@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="zh-CN" data-page-node-id="mEe01kjL7hiZGc0nz2mX1D">
+<head data-page-node-id="AyiskRTUAlSXBiCtNX0JuF">
+<meta charset="utf-8" data-page-node-id="kMHEeQx6SQfmSOE2KiZr3z">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" data-page-node-id="KZ2R9deDvtAfIprTfizIbg">
+<title>苍穹对决 Sky Duel · 开始游戏 | 免费3D联机空战网页游戏</title>
+<meta name="description" content="苍穹对决（Sky Duel）是一款免费免下载的 3D 飞机大战网页游戏：机炮狗斗、弱点打击、爆炸特效、海岛与现代都市双地图，支持 6 位房间码 WebRTC 双人联机，适配电脑与手机触屏，打开浏览器即玩。" data-page-node-id="232JCy5nzvbZaA9r0kZRba">
+<meta name="keywords" content="3D飞机大战,空战游戏,网页游戏,联机游戏,双人联机,WebRTC游戏,飞行射击,免费网页游戏,手机空战游戏,苍穹对决,Sky Duel,飞机游戏在线玩" data-page-node-id="cxof0d9LXEtPbDng1kt7Yq">
+<meta name="author" content="Sky Duel" data-page-node-id="Vzp7PCGNFZ7xwDEDZ57FGC">
+<meta name="theme-color" content="#f0f2f5" data-page-node-id="9sZ1LciNale5A4GGFdYfaz">
+<meta name="robots" content="index,follow" data-page-node-id="YECNi4YXzOcVHMt62HRqBx">
+<meta property="og:type" content="website" data-page-node-id="6cPZSHRjjrSlUswLY2OM8M">
+<meta property="og:title" content="苍穹对决 Sky Duel · 免费 3D 联机空战网页游戏" data-page-node-id="gEYvvsG2py6Xm6a4xI1jTk">
+<meta property="og:description" content="机炮狗斗 · 弱点打击 · 双地图 · 6 位房间码联机 · 电脑手机都能玩，无需下载，打开浏览器即战。" data-page-node-id="Enm3xVTGq1AIZx8QRnjkN0">
+<meta property="og:locale" content="zh_CN" data-page-node-id="hJuBhXfNnG3D7omJk0FuDi">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg" data-page-node-id="c1FMOZ0aoKhBQyEENKDknm">
+<link rel="apple-touch-icon" href="../favicon.svg" data-page-node-id="B41LZN7tb75obThzjfEIff">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "VideoGame",
+  "name": "苍穹对决",
+  "alternateName": "Sky Duel",
+  "description": "免费免下载的 3D 飞机大战网页游戏，支持 WebRTC 联机、海岛/现代都市双地图、手机触屏操作。",
+  "genre": ["射击", "空战", "动作"],
+  "gamePlatform": "Web Browser",
+  "applicationCategory": "Game",
+  "operatingSystem": "Any",
+  "inLanguage": "zh-CN",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
+  "playMode": ["SinglePlayer", "MultiPlayer"]
+}
+</script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--app-bg:#f0f2f5;--app-card:rgba(255,255,255,.72);--app-text:#1e293b;--app-muted:#64748b;
+    --app-accent:#2563eb;--app-accent2:#38bdf8;--app-green:#10b981;--app-red:#ef4444;
+    --app-border:rgba(37,99,235,.12);--app-shadow:0 14px 36px rgba(0,0,0,.08)}
+  html,body{height:100%;overflow:hidden;color:var(--app-text);
+    font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei','SimHei',sans-serif;user-select:none;
+    touch-action:none;-webkit-tap-highlight-color:transparent}
+  body{background:var(--app-bg)}
+  /* 背景装饰：柔和蓝色光晕（iOS 果味） */
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(circle at 82% 8%,rgba(56,189,248,.16),transparent 26rem),
+      radial-gradient(circle at 10% 20%,rgba(37,99,235,.1),transparent 24rem),
+      radial-gradient(circle at 88% 90%,rgba(56,189,248,.1),transparent 22rem)}
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair;z-index:1}
+  .hidden{display:none!important}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:10}
+  #crosshair{position:absolute;left:50%;top:50%;width:34px;height:34px;transform:translate(-50%,-50%)}
+  #crosshair::before{content:"";position:absolute;inset:0;border:2px solid rgba(140,230,255,.9);border-radius:50%}
+  #crosshair::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;background:#8ce6ff;
+    border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 6px #8ce6ff}
+  /* 大准星：飞机实际朝向（滞后于小准星，视角领先时偏移） */
+  #planeReticle{position:absolute;left:50%;top:50%;width:62px;height:62px;transform:translate(-50%,-50%);
+    opacity:0.3;transition:opacity .15s;pointer-events:none}
+  #planeReticle::before{content:"";position:absolute;inset:0;border:1.5px solid rgba(140,230,255,.45);border-radius:50%}
+  #planeReticle::after{content:"";position:absolute;left:50%;top:50%;width:20px;height:20px;
+    border:1px dashed rgba(140,230,255,.3);border-radius:50%;transform:translate(-50%,-50%)}
+  #hitmark{position:absolute;left:50%;top:50%;width:40px;height:40px;transform:translate(-50%,-50%) rotate(45deg);
+    opacity:0;transition:opacity .05s}
+  #hitmark::before,#hitmark::after{content:"";position:absolute;background:#ffe08a;box-shadow:0 0 6px #ffb347}
+  #hitmark::before{left:50%;top:0;width:3px;height:100%;transform:translateX(-50%)}
+  #hitmark::after{top:50%;left:0;height:3px;width:100%;transform:translateY(-50%)}
+  #hitmark.kill::before,#hitmark.kill::after{background:#ff6b5e;box-shadow:0 0 8px #ff3b2e}
+  #partHit{position:absolute;left:50%;top:calc(50% + 42px);transform:translateX(-50%);
+    font-size:15px;color:#ffd27a;text-shadow:0 0 8px rgba(255,160,60,.8);opacity:0;transition:opacity .15s}
+
+  .panelBox{background:rgba(8,18,32,.55);border:1px solid rgba(110,190,255,.25);border-radius:10px;
+    padding:10px 14px;backdrop-filter:blur(4px)}
+  #stats{position:absolute;left:22px;bottom:22px;min-width:250px}
+  .barOuter{height:14px;background:rgba(0,0,0,.5);border:1px solid rgba(140,220,255,.35);border-radius:7px;overflow:hidden;margin-top:6px}
+  .barFill{height:100%;width:100%;transition:width .12s}
+  #hpFill{background:linear-gradient(90deg,#37d67a,#a3e635)}
+  #foeHpFill{background:linear-gradient(90deg,#f87171,#ef4444)}
+  #stats .num{font-variant-numeric:tabular-nums;color:#9fd8ff;font-size:14px;margin-top:4px;display:inline-block;min-width:110px}
+  #stats .label{color:#7ea7c8;font-size:12px;letter-spacing:2px}
+
+  #foeStats{position:absolute;left:50%;top:18px;transform:translateX(-50%);width:320px;text-align:center}
+  #foeStats .name{font-size:13px;color:#ffb3a8;letter-spacing:3px;margin-bottom:4px}
+  #scoreLine{font-size:15px;color:#cfe8ff;margin-top:8px;letter-spacing:1px}
+  .pips{display:inline-flex;gap:6px;vertical-align:middle;margin:0 10px}
+  .pip{width:11px;height:11px;border-radius:50%;border:1px solid rgba(160,220,255,.5);background:rgba(0,0,0,.4)}
+  .pip.on.me{background:#4ade80;box-shadow:0 0 6px #4ade80}
+  .pip.on.foe{background:#f87171;box-shadow:0 0 6px #f87171}
+  #roundLabel{font-size:12px;color:#7ea7c8;letter-spacing:3px;margin-top:4px}
+
+  /* 多人状态栏（两队队员血量，死亡变灰）+ 击杀 */
+  #rosterPanel{position:absolute;left:14px;top:14px;font-size:12px;line-height:1.9;pointer-events:none;z-index:12}
+  .rosterRow{display:flex;align-items:center;gap:8px}
+  .rosterRow+.rosterRow{margin-top:9px;padding-top:9px;border-top:1px solid rgba(110,190,255,.20)}   /* 敌我两行分隔线 */
+  .rosterTag{letter-spacing:2px;min-width:36px;font-size:11px}
+  .rosterTag.mine{color:#7dd3a0}
+  .rosterTag.foe{color:#f0a8a0}
+  .rosterUnit{display:inline-flex;align-items:center;gap:5px;background:rgba(8,18,32,.6);
+    border:1px solid rgba(110,190,255,.22);border-radius:6px;padding:2px 6px;margin-right:4px;transition:opacity .15s}
+  .rosterUnit.dead{opacity:.35;filter:grayscale(1)}
+  .rosterUnit .uName{font-size:11px;color:#cfe8ff;letter-spacing:0}
+  .rosterUnit .uBar{width:76px;height:7px;background:rgba(0,0,0,.5);border-radius:3px;overflow:hidden}   /* 加宽加高：血量一眼可读 */
+  .rosterUnit .uFill{height:100%;width:100%;transition:width .12s}
+  .rosterUnit.mine .uFill{background:#4ade80}
+  .rosterUnit.foe .uFill{background:#f87171}
+  #killCount{position:absolute;right:22px;top:18px;font-size:16px;color:#ffd27a;letter-spacing:2px;
+    text-shadow:0 0 8px rgba(255,160,60,.5);pointer-events:none;z-index:12;font-variant-numeric:tabular-nums}
+  #perfStats{position:absolute;right:22px;top:48px;font-size:13px;color:#7ea7c8;font-variant-numeric:tabular-nums;line-height:1.5;text-align:right}
+
+  /* 飞机指示器（敌红/友蓝，复用同一套菱形标记） */
+  #markers{position:absolute;inset:0;pointer-events:none;z-index:9}
+  .planeMarker{position:absolute;pointer-events:none;transform:translate(-50%,-50%);
+    display:flex;flex-direction:column;align-items:center;transition:opacity .1s;opacity:0}
+  .planeMarker .diamond{width:14px;height:14px;border:2px solid;transform:rotate(45deg)}
+  .planeMarker .distance{margin-top:8px;font-size:12px;font-weight:bold;
+    text-shadow:0 1px 3px rgba(0,0,0,.8);font-family:monospace;letter-spacing:1px}
+  .planeMarker.foe .diamond{border-color:#ff4230;box-shadow:0 0 8px #ff4230;background:rgba(255,66,48,.2)}
+  .planeMarker.foe .distance{color:#ff8a7a}
+  .planeMarker.ally .diamond{border-color:#3fa7ff;box-shadow:0 0 8px #3fa7ff;background:rgba(63,167,255,.18)}
+  .planeMarker.ally .distance{color:#8fc9ff}
+
+  #banner{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);font-size:46px;font-weight:700;
+    letter-spacing:8px;color:#fff;text-shadow:0 0 18px rgba(120,200,255,.9),0 2px 6px rgba(0,0,0,.6);
+    opacity:0;transition:opacity .2s;white-space:nowrap}
+  #subBanner{position:absolute;left:50%;top:calc(30% + 46px);transform:translateX(-50%);font-size:16px;color:#9fd8ff;opacity:0;transition:opacity .2s}
+  #warn{position:absolute;left:50%;top:22%;transform:translateX(-50%);font-size:18px;color:#ffb347;
+    text-shadow:0 0 10px rgba(255,160,40,.7);opacity:0;transition:opacity .2s;letter-spacing:2px}
+  #dmgFlash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:8;
+    background:radial-gradient(ellipse at center,transparent 40%,rgba(255,30,20,.55) 100%)}
+  #zoomTip{position:absolute;right:22px;bottom:22px;font-size:12px;color:#5d82a0;text-align:right;line-height:1.8}
+  body.touch #zoomTip{display:none}
+  body.touch #stats{left:12px;bottom:200px;min-width:190px;padding:8px 10px}
+  body.touch #foeStats{top:8px;width:260px}
+
+  /* ---------- 触屏控件 ---------- */
+  #steerZone{position:fixed;inset:0;z-index:5;display:none}
+  body.touch #steerZone{display:block}
+  #touchUI{position:fixed;inset:0;z-index:15;pointer-events:none;display:none}
+  #touchUI.on{display:block}
+  #joyBase{position:absolute;left:34px;bottom:56px;width:128px;height:128px;border-radius:50%;
+    border:2px solid rgba(140,220,255,.45);background:rgba(10,25,45,.4);pointer-events:auto}
+  #joyBase::after{content:"飞行";position:absolute;left:50%;top:-22px;transform:translateX(-50%);
+    font-size:12px;color:#9fd8ff;letter-spacing:2px}
+  #joyKnob{position:absolute;left:50%;top:50%;width:54px;height:54px;border-radius:50%;
+    background:rgba(140,220,255,.55);border:2px solid rgba(200,240,255,.8);
+    transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(120,220,255,.5)}
+  .tBtn{position:absolute;border-radius:50%;pointer-events:auto;display:flex;align-items:center;
+    justify-content:center;letter-spacing:2px;color:#fff}
+  #btnFire{right:42px;bottom:60px;width:98px;height:98px;font-size:18px;
+    background:rgba(255,80,60,.32);border:2px solid rgba(255,120,100,.75);box-shadow:0 0 16px rgba(255,90,70,.35)}
+  #btnFire:active{background:rgba(255,80,60,.55)}
+  #btnZoom{right:164px;bottom:172px;width:64px;height:64px;font-size:14px;
+    background:rgba(90,160,255,.28);border:2px solid rgba(140,200,255,.6)}
+  #btnZoom:active{background:rgba(90,160,255,.5)}
+  /* 语音按钮：右上竖排（瞄准键正上方）——避开左下摇杆、左侧血条面板、右侧开火/瞄准键 */
+  .vBtn{display:none;width:62px;height:62px;font-size:12px;line-height:1.25;letter-spacing:1px;
+    background:rgba(16,38,66,.5);border:2px solid rgba(140,200,255,.55);color:#dff1ff}
+  .vBtn.on{background:rgba(24,150,105,.62);border-color:rgba(150,255,205,.95);color:#eafff6;
+    box-shadow:0 0 14px rgba(60,220,150,.4)}
+  #btnMic{right:164px;bottom:240px}
+  #btnRx{right:164px;bottom:308px}
+
+  /* ---------- 覆盖层 ---------- */
+  .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:30;
+    background:rgba(240,242,245,.9)}
+  /* 沉浸式主菜单：3D 展示场景可见，仅玻璃控件 */
+  #menu{background:rgba(240,242,245,.14)}
+  .menuTop{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;
+    padding:16px 22px;z-index:5;pointer-events:none}
+  .menuTop>*{pointer-events:auto}
+  .menuLogo{display:flex;align-items:center;gap:9px;font-size:21px;font-weight:800;letter-spacing:5px;color:#1e293b;
+    text-shadow:0 2px 14px rgba(255,255,255,.95),0 4px 22px rgba(255,255,255,.6)}
+  .menuLogo svg{filter:drop-shadow(0 3px 8px rgba(37,99,235,.35))}
+  .menuGmBar{position:absolute;top:70px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5;
+    background:rgba(255,255,255,.6);backdrop-filter:blur(16px) saturate(1.8);border:1px solid rgba(255,255,255,.9);
+    border-radius:999px;padding:5px;box-shadow:0 12px 34px rgba(0,0,0,.12)}
+  .gmPill{border:1px solid transparent;border-radius:999px;padding:9px 24px;font-size:14px;letter-spacing:2px;color:#475569;
+    background:transparent;cursor:pointer;transition:all .18s;font-family:inherit}
+  .gmPill:hover{color:#1e293b}
+  .gmPill.on{color:#1e293b;background:rgba(255,255,255,.92);border-color:rgba(255,255,255,1);
+    box-shadow:0 6px 18px rgba(0,0,0,.12)}
+  .menuBottom{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:18px;
+    padding:28px 20px 36px;z-index:5}
+  .bigPill{border:1px solid rgba(255,255,255,.95);border-radius:999px;padding:16px 42px;font-size:17px;letter-spacing:3px;
+    color:#1e293b;background:linear-gradient(135deg,rgba(255,255,255,.78),rgba(255,255,255,.34));
+    backdrop-filter:blur(18px) saturate(1.95);cursor:pointer;position:relative;
+    transition:all .18s;font-family:inherit;box-shadow:0 12px 32px rgba(0,0,0,.1),inset 0 1.5px 0 rgba(255,255,255,.95),inset 0 -5px 12px rgba(56,189,248,.2)}
+  .bigPill:hover{background:rgba(255,255,255,.92);transform:translateY(-3px);box-shadow:0 18px 44px rgba(0,0,0,.16)}
+  .bigPill:active{transform:translateY(0)}
+  .ghostPill{border:1px solid rgba(255,255,255,.95);border-radius:999px;padding:8px 20px;font-size:13px;letter-spacing:2px;
+    color:#334155;background:linear-gradient(135deg,rgba(255,255,255,.75),rgba(255,255,255,.35));
+    backdrop-filter:blur(16px) saturate(1.9);cursor:pointer;transition:all .16s;position:relative;
+    box-shadow:0 8px 20px rgba(0,0,0,.07),inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -3px 8px rgba(56,189,248,.14);font-family:inherit}
+  .ghostPill:hover{background:rgba(255,255,255,.95);transform:translateY(-1px)}
+  .glassPanel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(600px,94vw);
+    max-height:84vh;overflow:auto;background:rgba(255,255,255,.82);backdrop-filter:blur(18px) saturate(1.8);
+    border:1px solid rgba(255,255,255,.92);border-radius:18px;padding:24px 32px;
+    box-shadow:0 24px 70px rgba(0,0,0,.16);z-index:6}
+  #menuBoxBody{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(640px,94vw);
+    max-height:80vh;overflow:auto;z-index:6}
+  .menuBox{width:min(680px,94vw);max-height:94vh;overflow:auto;background:linear-gradient(135deg,rgba(255,255,255,.66),rgba(255,255,255,.3));
+    border:1px solid rgba(255,255,255,.9);border-radius:22px;padding:30px 38px;position:relative;
+    box-shadow:var(--app-shadow),inset 0 1.5px 0 rgba(255,255,255,.92),inset 0 -6px 16px rgba(56,189,248,.16);
+    backdrop-filter:blur(20px) saturate(1.9)}
+  .menuBox::before{content:"";position:absolute;top:0;left:10%;right:10%;height:42%;border-radius:22px;
+    background:linear-gradient(180deg,rgba(255,255,255,.4),transparent);pointer-events:none}
+  .menuBox::after{content:"";position:absolute;top:0;left:24%;width:52%;height:1.5px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);pointer-events:none}
+  #logoWrap{display:flex;justify-content:center;margin-bottom:6px}
+  #logoWrap svg{filter:drop-shadow(0 6px 16px rgba(37,99,235,.2))}
+  @keyframes titleGlow{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+  .menuBox h1{font-size:40px;letter-spacing:12px;text-align:center;color:var(--app-text);
+    animation:titleGlow 3s ease-in-out infinite}
+  .menuBox .sub{text-align:center;color:var(--app-muted);font-size:13px;letter-spacing:4px;margin:10px 0 24px}
+  .menuBox .sub b{color:var(--app-accent);font-weight:700;padding:1px 8px;border-radius:8px;background:rgba(37,99,235,.1)}
+  .btnRow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+  /* 所有按钮统一毛玻璃（无填充色） */
+  button{pointer-events:auto;cursor:pointer;font-size:15px;letter-spacing:2px;color:#1e293b;
+    background:linear-gradient(135deg,rgba(255,255,255,.72),rgba(255,255,255,.32));backdrop-filter:blur(14px) saturate(1.9);
+    border:1px solid rgba(255,255,255,.9);border-radius:12px;padding:12px 22px;position:relative;
+    transition:all .16s;box-shadow:0 8px 22px rgba(0,0,0,.08),inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -4px 10px rgba(56,189,248,.16)}
+  button:hover{background:rgba(255,255,255,.85);transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.13)}
+  button:active{transform:translateY(0)}
+  button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+  button.small{font-size:12px;padding:6px 12px;letter-spacing:1px;box-shadow:0 6px 16px rgba(0,0,0,.06)}
+  .sigPanel{border-top:1px dashed var(--app-border);padding-top:16px;margin-top:6px}
+  .sigPanel h3{font-size:17px;color:var(--app-text);letter-spacing:3px;margin-bottom:8px;text-align:center}
+  .sigPanel .step{font-size:12px;color:var(--app-muted);margin:8px 0 4px;line-height:1.6}
+  textarea{pointer-events:auto;width:100%;height:64px;resize:none;font-size:11px;color:var(--app-text);
+    background:rgba(255,255,255,.75);border:1px solid rgba(37,99,235,.16);border-radius:10px;padding:8px;font-family:monospace}
+  .status{font-size:13px;color:var(--app-accent);min-height:20px;margin-top:6px;text-align:center}
+  .help{margin-top:20px;font-size:12.5px;color:var(--app-muted);line-height:2;border-top:1px dashed var(--app-border);padding-top:14px}
+  .help b{color:var(--app-text);display:inline-block;min-width:150px}
+  .menuFooter{text-align:center;margin-top:16px;font-size:11px;color:#94a3b8;letter-spacing:1px}
+  .verTag{display:inline-block;margin-left:8px;padding:1px 8px;font-size:10px;letter-spacing:1px;color:var(--app-accent);
+    border:1px solid rgba(37,99,235,.35);border-radius:8px;background:rgba(37,99,235,.08);vertical-align:middle}
+  .zoomInfo{display:inline-block;margin-left:8px;padding:3px 12px;font-size:11px;letter-spacing:1px;color:#334155;
+    border:1px solid rgba(255,255,255,.95);border-radius:999px;background:rgba(255,255,255,.6);
+    backdrop-filter:blur(12px) saturate(1.8);box-shadow:0 6px 16px rgba(0,0,0,.07);
+    font-variant-numeric:tabular-nums;vertical-align:middle}
+  #pause .menuBox{text-align:center}
+
+  /* 地图卡片 */
+  .mapChoice{display:flex;gap:16px;justify-content:center;margin:18px 0}
+  .mapCard{flex:1;max-width:220px;padding:18px 14px;border:1.5px solid var(--app-border);border-radius:20px;
+    cursor:pointer;text-align:center;transition:all .16s;background:rgba(255,255,252,.85);pointer-events:auto;
+    box-shadow:0 10px 30px rgba(0,0,0,.06)}
+  .mapCard:hover{border-color:var(--app-accent);background:#fff;transform:translateY(-3px);
+    box-shadow:0 16px 40px rgba(0,0,0,.1)}
+  .mapCard.sel{border-color:var(--app-accent);background:rgba(37,99,235,.08);box-shadow:0 0 0 3px rgba(37,99,235,.22)}
+  .mapCard .mapName{font-size:15px;color:var(--app-text);font-weight:bold;margin-bottom:6px}
+  .mapCard .mapDesc{font-size:11px;color:var(--app-muted);line-height:1.5}
+  /* 选阵营 */
+  #pickPanel .menuBox{width:min(580px,92vw)}
+  .pickSides{display:flex;gap:16px;margin:20px 0 12px}
+  .pickSide{flex:1;position:relative;padding:24px 14px;border:1.5px solid var(--app-border);border-radius:20px;
+    background:rgba(255,255,252,.85);cursor:pointer;transition:all .18s;overflow:hidden;text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.06)}
+  .pickSide:hover{border-color:var(--app-lilac);background:#fff;transform:translateY(-3px)}
+  .pickSide.sel{border-color:var(--app-accent);background:rgba(37,99,235,.08);box-shadow:0 0 0 3px rgba(37,99,235,.22)}
+  .pickSide .pickShade{position:absolute;inset:0;background:rgba(117,116,108,.4);opacity:0;transition:opacity .2s;pointer-events:none;z-index:2}
+  .pickSide.full .pickShade{opacity:1}
+  .pickSide .pickName{font-size:17px;color:var(--app-text);font-weight:bold;letter-spacing:2px;margin-bottom:12px}
+  .pickSide .pickBar{height:8px;background:rgba(27,27,25,.1);border-radius:4px;overflow:hidden;margin-bottom:7px}
+  .pickSide .pickFill{height:100%;width:0%;transition:width .2s;background:linear-gradient(90deg,#10b981,#34d399)}
+  .pickSide.side1 .pickFill{background:linear-gradient(90deg,#f43f5e,#fb923c)}
+  .pickSide .pickCount{font-size:13px;color:var(--app-muted);font-variant-numeric:tabular-nums}
+  .pickSide.full .pickName{color:#a09f95}
+  .pickSide.full .pickCount{color:#a09f95}
+  .sizeChoice{display:flex;gap:14px;justify-content:center;margin:16px 0}
+  .sizeCard{flex:1;max-width:170px;padding:14px 10px;border:1.5px solid var(--app-border);border-radius:18px;
+    background:rgba(255,255,252,.85);cursor:pointer;transition:all .18s;text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.06)}
+  .sizeCard:hover{border-color:var(--app-accent);background:#fff;transform:translateY(-3px)}
+  .sizeCard.sel{border-color:var(--app-accent);background:rgba(37,99,235,.08);box-shadow:0 0 0 3px rgba(37,99,235,.22)}
+  .sizeCard .sizeName{font-size:18px;color:var(--app-text);font-weight:bold;margin-bottom:4px}
+  .sizeCard .sizeDesc{font-size:11px;color:var(--app-muted)}
+
+  /* 玩法切换 / 阵营选择 */
+  .gmChoice{display:flex;gap:14px;justify-content:center;margin:0 0 18px}
+  .gmCard{flex:1;max-width:200px;padding:14px 12px;border:1.5px solid var(--app-border);border-radius:18px;
+    background:rgba(255,255,252,.85);cursor:pointer;transition:all .18s;text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.06)}
+  .gmCard:hover{border-color:var(--app-accent);background:#fff;transform:translateY(-3px)}
+  .gmCard.sel{border-color:var(--app-accent);background:rgba(37,99,235,.08);box-shadow:0 0 0 3px rgba(37,99,235,.22)}
+  .gmCard .gmName{font-size:15px;color:var(--app-text);font-weight:bold;margin-bottom:4px;letter-spacing:2px}
+  .gmCard .gmDesc{font-size:11px;color:var(--app-muted)}
+  .sideChoice{display:flex;gap:14px;justify-content:center;margin:14px 0}
+  .sideCard{flex:1;max-width:200px;padding:16px 12px;border:1.5px solid var(--app-border);border-radius:18px;
+    background:rgba(255,255,252,.85);cursor:pointer;transition:all .18s;text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.06)}
+  .sideCard:hover{border-color:var(--app-lilac);background:#fff;transform:translateY(-3px)}
+  .sideCard.sel{border-color:var(--app-accent);background:rgba(37,99,235,.08);box-shadow:0 0 0 3px rgba(37,99,235,.22)}
+  .sideCard .sideName{font-size:15px;color:var(--app-text);font-weight:bold;margin-bottom:4px;letter-spacing:1px}
+  .sideCard .sideDesc{font-size:11px;color:var(--app-muted);line-height:1.5}
+
+  kbd{background:rgba(37,99,235,.1);border:1px solid rgba(205,243,78,.6);border-radius:5px;padding:1px 7px;font-family:inherit;font-size:12px;color:var(--app-text)}
+
+  /* ---- 菜单进场动画（进入游戏时级联） ---- */
+  body.playing #menu .menuTop,body.playing #menu .menuGmBar,body.playing #menu .menuBottom{animation:menuIn .7s cubic-bezier(.2,.7,.3,1.1) backwards}
+  body.playing #menu .menuTop{animation-delay:.15s}
+  body.playing #menu .menuGmBar{animation-delay:.32s}
+  body.playing #menu .menuBottom{animation-delay:.48s}
+  @keyframes menuIn{from{opacity:0;transform:translateY(34px)}to{opacity:1;transform:none}}
+to{transform:translate(8vw,6vh) scale(1.16)}}to{transform:translate(-7vw,7vh) scale(.92)}}
+</style>
+<script type="importmap">
+{ "imports": { "three": "../vendor/three.module.min.js" } }
+</script>
+<!-- 错误捕获层：把 JS 错误显示在页面顶部（诊断加载失败用） -->
+<script>
+window.addEventListener('error', function(e) {
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b91c1c;color:#fff;padding:8px 12px;font:12px/1.5 monospace;white-space:pre-wrap;border-bottom:2px solid #fca5a5';
+  d.textContent = 'JS错误: ' + e.message + ' \n@ ' + (e.filename||'').split('/').pop() + ':' + e.lineno + ':' + e.colno;
+  document.body.appendChild(d);
+});
+window.addEventListener('unhandledrejection', function(e) {
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:60px;left:0;right:0;z-index:99999;background:#7c2d12;color:#fff;padding:8px 12px;font:12px/1.5 monospace;white-space:pre-wrap';
+  d.textContent = 'Promise错误: ' + (e.reason && (e.reason.message || e.reason) || '');
+  document.body.appendChild(d);
+});
+</script>
+</head>
+<body class="playing" data-page-node-id="mx1AL7s6epG2Q8LAk0MVJk">
+<canvas id="c" data-page-node-id="6l3J2rZePEJFzt3yd9zzTt"></canvas>
+<div id="steerZone" data-page-node-id="4EoICn6yAyq6NlHtooQHs1"></div>
+
+<!-- HUD -->
+<div id="hud" class="hidden" data-page-node-id="WdQ05WkHsREjrNqtZuTWGj">
+  <div id="crosshair" data-page-node-id="4sH0b8B1ULdJXFr4Nn4Gcq"></div>
+  <div id="planeReticle" data-page-node-id="2sBbyvD6qY2coRi4VDJoHg"></div>
+  <div id="hitmark" data-page-node-id="kcWEFaEcLdwKRTAzOOzyms"></div>
+  <div id="partHit" data-page-node-id="GGHCbqZNWORkTlnnzCtCMn"></div>
+  <div id="markers" data-page-node-id="XAEVEVDNEZVwGAh9YdrZ8L"></div>
+  <!-- 多人状态栏：两队队员血量，死亡变灰 -->
+  <div id="rosterPanel" class="hidden" data-page-node-id="Kd1a5wUny3w5yTvIs8bJ10">
+    <div class="rosterRow" data-page-node-id="v87N6IghdrxHMwvrOEIeVw"><span class="rosterTag mine" data-page-node-id="w01I3A71oekFPzpoSTbwuc">我方</span><span class="rosterUnits" id="rosterMineUnits" data-page-node-id="A1dpwKJguhSjVBMtFLHLt0"></span></div>
+    <div class="rosterRow" data-page-node-id="ptPYpa6WhLGVGKcYmVyhzW"><span class="rosterTag foe" data-page-node-id="9jsG6VCalk13ezVyG9UsIJ">敌方</span><span class="rosterUnits" id="rosterFoeUnits" data-page-node-id="NoumDRcU9RTQMGLoICOH8e"></span></div>
+  </div>
+  <!-- 击杀数（右上角） -->
+  <div id="killCount" data-page-node-id="eHjYHXaC1MDazCfO3NPLdF">击杀 <span id="killVal" data-page-node-id="c8netmHKY9HhL8KwWsPsnw">0</span></div>
+  <div id="foeStats" class="panelBox" data-page-node-id="3RHhNoVy9xPJCHhy7wSgYM">
+    <div class="name" data-page-node-id="c7rrBwgB6I9GrZoGFINE0p">敌方</div>
+    <div class="barOuter" data-page-node-id="ewSgCywoq1pLBuOKNgMcKd"><div id="foeHpFill" class="barFill" data-page-node-id="my0q66WSMqydG2gFdtWx53"></div></div>
+    <div id="scoreLine" data-page-node-id="qWQQoKQL5YRYk62wA2cbCP">我 <span class="pips" id="pipsMe" data-page-node-id="qSMnm4cdkL4HV3oPNxmFZY"></span><b id="scoreText" data-page-node-id="9pb6FPX3hl9na1FNtHCJvt">0 : 0</b><span class="pips" id="pipsFoe" data-page-node-id="ddKFbS5D0bkCAM2KjJ9FSL"></span> 敌</div>
+    <div id="roundLabel" data-page-node-id="brw3G1fmZTgfG4KGWaH5S0">第 1 回合</div>
+  </div>
+  <div id="perfStats" data-page-node-id="RYIyx53BmQymmrwTha0dFk">FPS: <span id="fpsVal" data-page-node-id="MtGxFTG0d6SRpJqmVPwzH5">60</span><br data-page-node-id="yr6O89vme5IDRBAdOEMx7p"><span id="pingValText" data-page-node-id="eEFsmtHcoiLkG3HrnQY0DH"></span></div>
+  <div id="stats" class="panelBox" data-page-node-id="oFaUCyT3nl33AZyhnt463N">
+    <span class="label" id="hpLabel" data-page-node-id="wWelW7WCMzbnhWHnSM7qlh">机体结构</span>
+    <div class="barOuter" data-page-node-id="zeeB9MzJTcc63UH4KZX33k"><div id="hpFill" class="barFill" data-page-node-id="LEv53omOe4ShWgSPdq7CZH"></div></div>
+    <span class="num" data-page-node-id="qbr5Db1Ip9FhlSbH4YH9ev">速度 <b id="speedVal" data-page-node-id="uvNfsDkP52xS2wljlQPluo">0</b> km/h</span>
+    <span class="num" data-page-node-id="HH6UaH3tBgXYiqz6d6LDDY">高度 <b id="altVal" data-page-node-id="xAbF1UmiL4ECuxHTNSsAF7">0</b> m</span>
+  </div>
+  <div id="banner" data-page-node-id="XEp0VfJx6iY0kI263VN17Q"></div>
+  <div id="subBanner" data-page-node-id="TfjVAUpsSyak6gEEyWAZef"></div>
+  <div id="warn" data-page-node-id="SADBXnTI8IxSSWHYJqRCY0"></div>
+  <div id="zoomTip" data-page-node-id="H5jn3kqmHDBJWPfD2qHbuQ">鼠标 控制视角 · 飞机自动跟随<br data-page-node-id="pXGvlh268HLRa5sDKkvJ3y">左键 机炮 / 右键 瞄准 · W加速 S减速 · M静音</div>
+</div>
+<div id="dmgFlash" data-page-node-id="PH0GBMLXACBcycjSaMopzW"></div>
+
+<!-- 触屏控件 -->
+<div id="touchUI" data-page-node-id="V4VvdV5ZykGSX9Q8dOwfCA">
+  <div id="joyBase" data-page-node-id="Il324Vv1LVlzYNOc2LuZwW"><div id="joyKnob" data-page-node-id="K8Hy2DjUxunHwUJxGaDirq"></div></div>
+  <div class="tBtn" id="btnZoom" data-page-node-id="flnOLldEUTDh43POYwOAm5">瞄准</div>
+  <div class="tBtn" id="btnFire" data-page-node-id="7QoDIVU6k7nDUdOq5y37Ga">开火</div>
+  <!-- 语音（手机端没有 T/Y 键，这里给触屏按钮） -->
+  <div class="tBtn vBtn" id="btnMic">麦克风</div>
+  <div class="tBtn vBtn" id="btnRx">收听</div>
+</div>
+
+<!-- 主菜单 / 联机：3D 展示场景 + 玻璃药丸控件 -->
+<div id="menu" class="overlay" data-page-node-id="PROo4bAF7iEcGePAzP0K0W">
+  <!-- 顶部：帮助（左）+ logo（中）+ 版本（右） -->
+  <div class="menuTop" data-page-node-id="GlwvIS6OpcnitZa3zVgaCL">
+    <button class="ghostPill" id="btnBackLanding" onclick="location.href='/'">首页</button>
+    <button class="ghostPill" id="btnHelp" data-page-node-id="pRfbITaMSZHliyIpn88WQC">帮助</button>
+    <div class="menuLogo" data-page-node-id="CKJK55lz2xDKmI2lU6ziaR"><svg width="30" height="30" viewBox="0 0 64 64" data-page-node-id="Jjsb9kL2wphWhtF5S3CGQI"><defs data-page-node-id="ugbrgtYY0n1zp0zSoE6plS"><linearGradient id="lgPlane" x1="0" y1="0" x2="0" y2="1" data-page-node-id="s02qm0KRjMLx1Y33EGNQnU"><stop offset="0" stop-color="#38bdf8" data-page-node-id="mP3PmQyVyOM1LIuLmGeNZS"/><stop offset="1" stop-color="#2563eb" data-page-node-id="ReaPC67THenkWBfgXDwOIv"/></linearGradient></defs><path d="M32 9 C34 16 35 21 36 26 L53 39 L53 44 L36 37 L36 46 L43 51 L43 55 L32 51.5 L21 55 L21 51 L28 46 L28 37 L11 44 L11 39 L28 26 C29 21 30 16 32 9 Z" fill="url(#lgPlane)" data-page-node-id="C49Bo10Cm4rzsXOT9J9lJY"/></svg>苍穹对决</div>
+    <span class="verTag" id="verTag" data-page-node-id="cAXYjo41wfkmiZ45E53qEv"></span>
+    <span class="zoomInfo" id="menuZoomInfo" data-page-node-id="uZqCyagDtBoQEtX2QXzkJP">1.0×</span>
+  </div>
+  <!-- 玩法切换（顶部药丸） -->
+  <div class="menuGmBar" id="menuGmTabs" data-page-node-id="wwQNIOtt6AzBJDyLYlZAh2">
+    <button class="gmPill on" data-gm="dogfight" data-page-node-id="Nis5j6yod1Iw7WjPRaAGp8">空战对决</button>
+    <button class="gmPill" data-gm="aavs" data-page-node-id="z7BHRr8niOVA0F1XnllZp9">防空车突袭</button>
+  </div>
+  <!-- 底部：主按钮（药丸） -->
+  <div class="menuBottom" data-page-node-id="Ft0bLT6qFar5FzMStEr1YL">
+    <button class="bigPill" id="btnPractice" data-page-node-id="vQBBFZRZ6TMcIAE8emHhug">练习模式</button>
+    <button class="bigPill" id="btnHost" data-page-node-id="wIaqQSfPOxMD0mGHvCA6Nh">创建房间</button>
+    <button class="bigPill" id="btnJoin" data-page-node-id="2ii5K7qN4TDX6Rvs2dQFVr">加入房间</button>
+  </div>
+
+  <!-- 二级面板容器（点主按钮后弹出） -->
+  <div class="menuBox" id="menuBoxBody" style="display:none" data-page-node-id="cIyZqlRFGypItd2hZzDhT5">
+    <div id="practicePanel" class="sigPanel hidden" data-page-node-id="baW0xjHPx85WN5b4rxVB29">
+      <h3 data-page-node-id="ryrpWIqope4YgST7LRuLhW">练习模式</h3>
+      <div id="aavsSideChoice" class="hidden" data-page-node-id="RWijnHsw4MohyhPnLNjxnv">
+        <div class="sideChoice" data-page-node-id="AM2E1EhPjBs1pdPqC29Rxw">
+          <div class="sideCard" data-side="plane" data-page-node-id="UDXdrBo0VATIk2NOKiX8RQ"><div class="sideName" data-page-node-id="bZxDlwpC6OlhiJ20Be8Q5I">✈ 飞机突袭</div><div class="sideDesc" data-page-node-id="SIIAZO1VzU5mknAlmYgD9j">驾驶战机<br data-page-node-id="wwoyikf6yx9jt8M0hxQuJU">击爆敌方防空车</div></div>
+          <div class="sideCard" data-side="aagun" data-page-node-id="EGTKglDJdLCAIxmCz4oCC0"><div class="sideName" data-page-node-id="Cy54i4gVkgBvOp0vvE1EXR">🛡 防空拦截</div><div class="sideDesc" data-page-node-id="qCCxUwNN0bVjrq7DvQaFv1">操控高炮车<br data-page-node-id="Ok0EpwwQHXGR1kQe15b6Vq">击落来袭战机</div></div>
+        </div>
+      </div>
+      <div id="practiceMapChoice" data-page-node-id="vv0XRaw1GwBrubRanyXrdv">
+        <div class="mapChoice" data-page-node-id="yBsuUhrsfFTMMMbyeAjV67">
+          <div class="mapCard" data-map="island" data-page-node-id="A9JTbOTq5q8q3vttO1vb6N"><div class="mapName" data-page-node-id="uuhvm6vr6VsYWHZPumHLIn">太平洋海岛</div><div class="mapDesc" data-page-node-id="WJ4km0CoFFC76i6acxE3UZ">碧海岛屿<br data-page-node-id="PdA7I10GEYpCq8SS789hiu">山峰掩体</div></div>
+          <div class="mapCard" data-map="city" data-page-node-id="dVnGmuupMcVFXizwuwh6EN"><div class="mapName" data-page-node-id="zkuSSJfAPDuuUAQC4gOrii">现代都市</div><div class="mapDesc" data-page-node-id="ETHGz1hJAmHhHDevFd1iuB">摩天楼群<br data-page-node-id="ISMFlorLY7acdfDa8FMXWp">穿城运河</div></div>
+        </div>
+      </div>
+      <div class="status" id="practiceStatus" data-page-node-id="jdgC63t0OYbboO7oBm0cu0">点击地图即可开始</div>
+      <div class="btnRow" style="justify-content:flex-start" data-page-node-id="SBjQgrge5ynyBgtx7QLvce"><button class="small" id="btnBackFromPractice" data-page-node-id="JqH9wdcb3iyxfyNh7A7QRg">返回</button></div>
+    </div>
+
+    <div id="hostPanel" class="sigPanel hidden" data-page-node-id="VD2QCEEbsCDD3vHJUPOxv0">
+      <h3 id="hostPanelTitle" data-page-node-id="PeTi4eKSyv9wsmDKuNg7KV">创建房间 · 选择规模</h3>
+      <div id="hostSideChoice" class="hidden" data-page-node-id="7xh0GHnKk6TVXQuUvA90DA">
+        <div class="sizeChoice" data-page-node-id="TN0XBmmpVxCU9nElNAmPdD">
+          <div class="sideCard" data-side="plane" data-page-node-id="hDiOgIn7HV8GBvasnY8vtc"><div class="sideName" data-page-node-id="C642c0CsuiJhhDCOYAC3rX">✈ 飞机阵营</div><div class="sideDesc" data-page-node-id="0jaLEnnEKUtGf5U3O04AzG">驾驶战机<br data-page-node-id="VZ1F8flCWRONYkdlqtZc6J">击爆敌方防空车</div></div>
+          <div class="sideCard" data-side="aagun" data-page-node-id="PNKOPl9x4UfvVhUypEEWdM"><div class="sideName" data-page-node-id="rSK7FXQEcSOebh75yD1s2W">🛡 防空车阵营</div><div class="sideDesc" data-page-node-id="ett5wypgXcTG2zRY0GWyGM">操控高炮车<br data-page-node-id="dZIxUzoaIDccUN9S9DazN5">击落来袭战机</div></div>
+        </div>
+      </div>
+      <div class="sizeChoice" id="hostSizeChoice" data-page-node-id="EFmXFivQnHaBEFGbhXyAew">
+        <div class="sizeCard" data-size="1v1" data-page-node-id="zEBOhaSDicf92kDnqTNKlu"><div class="sizeName" data-page-node-id="SknXUiRx8qjfLjpkhirRmL">1v1</div><div class="sizeDesc" data-page-node-id="YVqKSaC1fiXjKDtczy5P9c">双人对决</div></div>
+        <div class="sizeCard" data-size="3v3" data-page-node-id="XaTBs0unIJFmEqKEfFJSxr"><div class="sizeName" data-page-node-id="EG3XfAg3SeKGdjHcBk4xPJ">3v3</div><div class="sizeDesc" data-page-node-id="QBNfsnkKiHkDxHtUbY7kDO">六人组队</div></div>
+        <div class="sizeCard" data-size="5v5" data-page-node-id="CcQ254EipyLeMtwxAsXGNA"><div class="sizeName" data-page-node-id="iEC3gxOQx1HAMiFqIOkpaA">5v5</div><div class="sizeDesc" data-page-node-id="KVyrAT5kQBUzrs5KhwerdU">十人决战</div></div>
+      </div>
+      <div id="hostOfferRow" class="hidden" data-page-node-id="qsPbDFDEFndnyQdIqwV0U6">
+        <h3 style="margin-top:10px" data-page-node-id="W8swGdVX0btOVIFJtPYAgL">邀请码</h3>
+        <div class="step" data-page-node-id="KIpyspgXLGRPkWqJ84YaXm">第 1 步：生成邀请码，复制后发给所有好友</div>
+        <div class="btnRow" style="justify-content:flex-start" data-page-node-id="LwVQq9lcZd6y65AzaEtMkm">
+          <button class="small" id="btnGenOffer" data-page-node-id="AQOqLhAZAem2XHt2YwRIdv">生成邀请码</button>
+          <button class="small" id="copyOffer" data-page-node-id="2h3ZDCQ9OAoLCCaapaNWms">复制</button>
+        </div>
+        <textarea id="taOffer" readonly placeholder="邀请码将显示在这里"></textarea>
+        <div class="step" data-page-node-id="NcEqU6mxr1Xsm3knK4xaNO">第 2 步：每个好友各自粘贴邀请码生成应答码，把应答码发回给你，逐个粘贴连接</div>
+        <textarea id="taAnswerHost" placeholder="粘贴好友的应答码"></textarea>
+        <div class="btnRow" style="justify-content:flex-start" data-page-node-id="9bfOKJmdJ1N3vYrwt1Joir">
+          <button class="small" id="btnConnHost" data-page-node-id="cL5QqApE8u6xpoz1jjjbyO">连接此人</button>
+          <span class="status" id="hostStatus" style="margin-left:8px" data-page-node-id="WoRUpxeAF0nGpjnaKbigJG"></span>
+        </div>
+      </div>
+      <div class="btnRow" style="justify-content:flex-start;margin-top:8px" data-page-node-id="oPklplsS7qEZDzaYKcGuN1"><button class="small" id="btnBackFromHost" data-page-node-id="VXcOfA57wrzkPZxW9Pr8eA">返回</button></div>
+    </div>
+
+    <div id="joinPanel" class="sigPanel hidden" data-page-node-id="Gdh1eVqkbIfxxLkmljSOob">
+      <h3 data-page-node-id="2zQzPzIqWyWA32IxoBu2oc">加入房间</h3>
+      <div class="step" data-page-node-id="rcre9wcnLAMez1dFT0wsnH">第 1 步：粘贴好友的邀请码</div>
+      <textarea id="taOfferJoin" placeholder="粘贴邀请码"></textarea>
+      <div class="btnRow" style="justify-content:flex-start" data-page-node-id="BUJv4Cz9STF95lkz2ZMP1s">
+        <button class="small" id="btnGenAnswer" data-page-node-id="qrrEHBuZR6Fw4xr4XQtYXj">生成应答码</button>
+        <button class="small" id="copyAnswer" data-page-node-id="O5CuMmGt2RVtviuwHeqhlU">复制</button>
+      </div>
+      <div class="step" data-page-node-id="3SC1dFcdUCOxhCnGSFieEE">第 2 步：把应答码发给好友</div>
+      <textarea id="taAnswerJoin" readonly placeholder="应答码将显示在这里"></textarea>
+      <div class="status" id="joinStatus" data-page-node-id="hITdiekiwTOq7rh30IoQew"></div>
+      <div class="btnRow" style="justify-content:flex-start" data-page-node-id="Cg9XL2gza6JIokhclzEXRJ"><button class="small" id="btnBackFromJoin" data-page-node-id="EfyEHZGrAjJffYNwlyMLnq">返回</button></div>
+    </div>
+
+    <div id="mapLobbyPanel" class="sigPanel hidden" data-page-node-id="kGZg2qRFLerJCpJkS8qdF1">
+      <h3 id="mapLobbyTitle" data-page-node-id="J1djUoeHMpXbTmvCWlfUmb">选择空域</h3>
+      <div class="mapChoice" id="lobbyMapChoice" data-page-node-id="XbwTmhvNdSdZNC4BGHACDu">
+        <div class="mapCard" data-map="island" data-page-node-id="fSKjJCoO3HyVbjMipIeegQ">
+          <div class="mapName" data-page-node-id="aOfqEE64qmQQoldYDxemP3">太平洋海岛</div>
+          <div class="mapDesc" data-page-node-id="9aCwemZ9zwA8eeCtWi4ouS">碧海岛屿<br data-page-node-id="QffAsRdX5VxDBYIuG46bXw">山峰掩体</div>
+        </div>
+        <div class="mapCard" data-map="city" data-page-node-id="4ARj06FPZy11QiXnixTYEO">
+          <div class="mapName" data-page-node-id="qKTjBJdltwJJHKbPiwJyzq">现代都市</div>
+          <div class="mapDesc" data-page-node-id="RGKyCKJYLBFazDJ1DCa9rJ">摩天楼群<br data-page-node-id="sjPW7p1FepZyqSw4ZVXOfa">穿城运河</div>
+        </div>
+      </div>
+      <div class="status" id="mapLobbyStatus" data-page-node-id="cCG57tK8Vz8De5wJtcIMTt">主机选择地图中…</div>
+    </div>
+  </div>
+
+  <!-- 帮助弹层（二级菜单，左上角帮助按钮打开） -->
+  <div id="helpPanel" class="glassPanel hidden" data-page-node-id="iCV0GyCHQ6SiY7Yx7AQ5HD">
+    <h3 style="text-align:center;margin-bottom:12px" data-page-node-id="msLRZ6yK28RhEfDvC4L5om">操作说明</h3>
+    <div class="help" data-page-node-id="3vqhvSLiEThM8NE4osgvcM">
+      <b>✈ 飞机（空战模式）</b><br>
+      鼠标控制视角，飞机自动追赶（<b>小准星</b>=视角方向，<b>大准星</b>=机头实际朝向，两圈重合即完全跟随）。<br>
+      <kbd>左键</kbd> 机炮　<kbd>右键</kbd> 按住瞄准放大　<kbd>W</kbd>/<kbd>S</kbd> 加速 / 减速<br>
+      <kbd>T</kbd> 开关麦克风（联机语音）　<kbd>Y</kbd> 开关收听队友语音　<kbd>M</kbd> 全局静音　<kbd>Esc</kbd> 暂停（点击画面继续）<br>
+      <br>
+      <b>🛡 防空车（防空作战模式）</b><br>
+      鼠标控制炮塔旋转 / 俯仰，<kbd>左键</kbd> 双管高射机枪（高射速带散布），<kbd>W</kbd><kbd>S</kbd> 前后挪车，<kbd>A</kbd><kbd>D</kbd> 车体转向。车是固定靶位打法：占好点、卡视野。<br>
+      <br>
+      <b>📱 手机端</b><br>
+      左摇杆：上下=加减速，左右=转向 / 平移；屏幕滑动=控制视角 / 炮塔；右侧按键=开火 / 瞄准。<br>
+      <br>
+      <b>⚔ 战场规则</b><br>
+      · <b>撞击即毁</b>：撞海、撞地、撞楼、撞山都是立即爆炸，轻擦友机各扣少量血，飞机撞防空车 / 敌机相撞同归于尽。<br>
+      · <b>弱点打击</b>：飞机驾驶舱 3 倍伤害；防空车弹药箱 2 倍、炮塔 1.3 倍（车体血量 120）。机炮打防空车带溅射（近车或落地爆炸范围伤车）。<br>
+      · <b>空域限制</b>：飞出边界警告并持续扣血，超高同样警告；多人模式有友军伤害。<br>
+      · <b>敌我识别</b>：我方蓝色标记、敌方红色标记，屏幕内外菱形指示器全程追踪；右上角为你的击杀数（房主权威统计）。<br>
+      · <b>观战</b>：被击落后若队友还在战斗，自动进入观战视角：<kbd>左键</kbd> 切换观战对象，<kbd>滚轮</kbd> 缩放距离。<br>      · <b>语音</b>：电脑端 <kbd>T</kbd> 开麦 / <kbd>Y</kbd> 收音；手机端用右上角的「麦克风 / 收听」按钮。外放时对方会听到你这边漏出的游戏音效，建议戴耳机。<br>
+      <br>
+      <b>🌐 联机模式</b><br>
+      房主创建房间（1v1 / 3v3 / 5v5）并选择地图（空战二选一：太平洋海岛 / 现代都市；防空作战固定军事基地图），全员同图开局。3v3/5v5 开局前全员选阵营，防空车 1v1 拼手速先抢先得。五局三胜，房主掉线全员判负。<br>
+    </div>
+    <div class="btnRow" style="margin-top:14px;margin-bottom:0" data-page-node-id="kEbr51i07jB15Eag0G3d9p"><button class="small" id="btnCloseHelp" data-page-node-id="p5G8mq3WCkogYMSOdCLkYv">关闭</button></div>
+  </div>
+</div>
+
+
+<!-- 选阵营（3v3/5v5 开局前） -->
+<div id="pickPanel" class="overlay hidden" data-page-node-id="L3wcV8HRgiBDFVvvPXMWvP">
+  <div class="menuBox" data-page-node-id="FCm0Oeyy5yWs50VfqZQ0Hc">
+    <h1 style="font-size:22px;letter-spacing:4px" data-page-node-id="vEzaAu1zSMLeL2t8sKB5xQ">选择阵营</h1>
+    <div class="pickSides" data-page-node-id="yMrqWRXB12fiWcpkE01Qpk">
+      <div class="pickSide" id="pickSide0" data-page-node-id="0NSNckTzJEwdGuDknMvlyc">
+        <div class="pickName" id="pickName0" data-page-node-id="HVNpiTiYUqd8iBj54sVDHR">✈ 飞机</div>
+        <div class="pickBar" data-page-node-id="mKe9EZz5lVepWKqljAIumO"><div class="pickFill" id="pickFill0" data-page-node-id="OYocuhRxFVhuB63zeqDHTt"></div></div>
+        <div class="pickCount" id="pickCount0" data-page-node-id="j4lt3jPF5Cih4ohEmB6P10">0 / 0</div>
+        <div class="pickShade" data-page-node-id="JKJGIUr8H9KvcWjZEIv9VM"></div>
+      </div>
+      <div class="pickSide side1" id="pickSide1" data-page-node-id="pTw8K0iDNQvBm0Ez0PCcT0">
+        <div class="pickName" id="pickName1" data-page-node-id="FdiR7hDMeExWAJRoRC3Q8K">🛡 防空车</div>
+        <div class="pickBar" data-page-node-id="G8fpEs9YyuU42TEfcdqw0r"><div class="pickFill" id="pickFill1" data-page-node-id="CjAzRyTFBpVesjtfFapG3t"></div></div>
+        <div class="pickCount" id="pickCount1" data-page-node-id="Dajbb34Re0vvcZcR5ocdDl">0 / 0</div>
+        <div class="pickShade" data-page-node-id="GzFWYFD5O5oRsbEba9dESL"></div>
+      </div>
+    </div>
+    <div class="sub" id="pickStatus" data-page-node-id="Ik7ce0R5ejFDcMP8ggwqR5">选择后不可更改 · 等待全员选择…</div>
+  </div>
+</div>
+
+<!-- 暂停 -->
+<div id="pause" class="overlay hidden" data-page-node-id="0O0lP1xpn0SVu5NIADNwdv">
+  <div class="menuBox" data-page-node-id="FBGBpzur2Z05J0Ll6EZhDT">
+    <h1 style="font-size:24px;letter-spacing:4px" data-page-node-id="tsZWCAXWhvCXNvq7nZ0wFr">已暂停</h1>
+    <div class="sub" id="pauseText" data-page-node-id="MHjMJQEIrJBnKXGYukJmpa">点击任意处继续战斗 <span class="verTag" id="verTagPause" data-page-node-id="UNrW5WVJq9PtWglx04p7Li"></span></div>
+  </div>
+</div>
+
+<!-- 结算 -->
+<div id="matchPanel" class="overlay hidden" data-page-node-id="C334HZIF0lXmWobrw7Oiw5">
+  <div class="menuBox" style="text-align:center" data-page-node-id="pIfctK9UefaSFR05SYlQy6">
+    <h1 id="matchTitle" style="font-size:30px;letter-spacing:6px" data-page-node-id="aRSSZLyexAFL3vfMgbTbTa">胜利</h1>
+    <div class="sub" id="matchSub" data-page-node-id="HdYdOodVJEK9AlGhbLSOJd"></div>
+    <div class="btnRow" style="justify-content:center;margin-top:10px" data-page-node-id="SRG17ZUr6gCBaCAde3OUuV">
+      <button id="btnRematch" data-page-node-id="vMJ6gTHN1TnqlHHpsDPWbr">再来一局</button>
+      <button id="btnBackMenu" data-page-node-id="EfqwpLWjt34vS5qxV69Oeq">返回主菜单</button>
+    </div>
+  </div>
+</div>
+<script type="module" src="../js/main.js?v=1453"></script>
+</body>
+</html>

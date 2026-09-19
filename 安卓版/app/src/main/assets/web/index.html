@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>苍穹对决 Sky Duel</title>
+<meta name="theme-color" content="#f0f2f5">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--app-bg:#f0f2f5;--app-card:rgba(255,255,255,.72);--app-text:#1e293b;--app-muted:#64748b;
+    --app-accent:#2563eb;--app-accent2:#38bdf8;--app-green:#10b981;--app-red:#ef4444;
+    --app-border:rgba(37,99,235,.12);--app-shadow:0 14px 36px rgba(0,0,0,.08)}
+  html,body{height:100%;overflow:hidden;color:var(--app-text);
+    font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei','SimHei',sans-serif;user-select:none;
+    touch-action:none;-webkit-tap-highlight-color:transparent}
+  body{background:var(--app-bg)}
+  /* 背景装饰：柔和蓝色光晕（iOS 果味） */
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(circle at 82% 8%,rgba(56,189,248,.16),transparent 26rem),
+      radial-gradient(circle at 10% 20%,rgba(37,99,235,.1),transparent 24rem),
+      radial-gradient(circle at 88% 90%,rgba(56,189,248,.1),transparent 22rem)}
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair;z-index:1}
+  .hidden{display:none!important}
+
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;inset:0;pointer-events:none;z-index:10}
+  #crosshair{position:absolute;left:50%;top:50%;width:34px;height:34px;transform:translate(-50%,-50%)}
+  #crosshair::before{content:"";position:absolute;inset:0;border:2px solid rgba(140,230,255,.9);border-radius:50%}
+  #crosshair::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;background:#8ce6ff;
+    border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 6px #8ce6ff}
+  /* 大准星：飞机实际朝向（滞后于小准星，视角领先时偏移） */
+  #planeReticle{position:absolute;left:50%;top:50%;width:62px;height:62px;transform:translate(-50%,-50%);
+    opacity:0.3;transition:opacity .15s;pointer-events:none}
+  #planeReticle::before{content:"";position:absolute;inset:0;border:1.5px solid rgba(140,230,255,.45);border-radius:50%}
+  #planeReticle::after{content:"";position:absolute;left:50%;top:50%;width:20px;height:20px;
+    border:1px dashed rgba(140,230,255,.3);border-radius:50%;transform:translate(-50%,-50%)}
+  #hitmark{position:absolute;left:50%;top:50%;width:40px;height:40px;transform:translate(-50%,-50%) rotate(45deg);
+    opacity:0;transition:opacity .05s}
+  #hitmark::before,#hitmark::after{content:"";position:absolute;background:#ffe08a;box-shadow:0 0 6px #ffb347}
+  #hitmark::before{left:50%;top:0;width:3px;height:100%;transform:translateX(-50%)}
+  #hitmark::after{top:50%;left:0;height:3px;width:100%;transform:translateY(-50%)}
+  #hitmark.kill::before,#hitmark.kill::after{background:#ff6b5e;box-shadow:0 0 8px #ff3b2e}
+  #partHit{position:absolute;left:50%;top:calc(50% + 42px);transform:translateX(-50%);
+    font-size:15px;color:#ffd27a;text-shadow:0 0 8px rgba(255,160,60,.8);opacity:0;transition:opacity .15s}
+
+  .panelBox{background:rgba(8,18,32,.55);border:1px solid rgba(110,190,255,.25);border-radius:10px;
+    padding:10px 14px;backdrop-filter:blur(4px)}
+  #stats{position:absolute;left:22px;bottom:22px;min-width:250px}
+  .barOuter{height:14px;background:rgba(0,0,0,.5);border:1px solid rgba(140,220,255,.35);border-radius:7px;overflow:hidden;margin-top:6px}
+  .barFill{height:100%;width:100%;transition:width .12s}
+  #hpFill{background:linear-gradient(90deg,#37d67a,#a3e635)}
+  #foeHpFill{background:linear-gradient(90deg,#f87171,#ef4444)}
+  #stats .num{font-variant-numeric:tabular-nums;color:#9fd8ff;font-size:14px;margin-top:4px;display:inline-block;min-width:110px}
+  #stats .label{color:#7ea7c8;font-size:12px;letter-spacing:2px}
+
+  #foeStats{position:absolute;left:50%;top:18px;transform:translateX(-50%);width:320px;text-align:center}
+  #foeStats .name{font-size:13px;color:#ffb3a8;letter-spacing:3px;margin-bottom:4px}
+  #scoreLine{font-size:15px;color:#cfe8ff;margin-top:8px;letter-spacing:1px}
+  .pips{display:inline-flex;gap:6px;vertical-align:middle;margin:0 10px}
+  .pip{width:11px;height:11px;border-radius:50%;border:1px solid rgba(160,220,255,.5);background:rgba(0,0,0,.4)}
+  .pip.on.me{background:#4ade80;box-shadow:0 0 6px #4ade80}
+  .pip.on.foe{background:#f87171;box-shadow:0 0 6px #f87171}
+  #roundLabel{font-size:12px;color:#7ea7c8;letter-spacing:3px;margin-top:4px}
+
+  /* 多人状态栏（两队队员血量，死亡变灰）+ 击杀 */
+  #rosterPanel{position:absolute;left:14px;top:14px;font-size:12px;line-height:1.9;pointer-events:none;z-index:12}
+  .rosterRow{display:flex;align-items:center;gap:8px}
+  .rosterRow+.rosterRow{margin-top:9px;padding-top:9px;border-top:1px solid rgba(110,190,255,.20)}   /* 敌我两行分隔线 */
+  .rosterTag{letter-spacing:2px;min-width:36px;font-size:11px}
+  .rosterTag.mine{color:#7dd3a0}
+  .rosterTag.foe{color:#f0a8a0}
+  .rosterUnit{display:inline-flex;align-items:center;gap:5px;background:rgba(8,18,32,.6);
+    border:1px solid rgba(110,190,255,.22);border-radius:6px;padding:2px 6px;margin-right:4px;transition:opacity .15s}
+  .rosterUnit.dead{opacity:.35;filter:grayscale(1)}
+  .rosterUnit .uName{font-size:11px;color:#cfe8ff;letter-spacing:0}
+  .rosterUnit .uBar{width:76px;height:7px;background:rgba(0,0,0,.5);border-radius:3px;overflow:hidden}   /* 加宽加高：血量一眼可读 */
+  .rosterUnit .uFill{height:100%;width:100%;transition:width .12s}
+  .rosterUnit.mine .uFill{background:#4ade80}
+  .rosterUnit.foe .uFill{background:#f87171}
+  #killCount{position:absolute;right:22px;top:18px;font-size:16px;color:#ffd27a;letter-spacing:2px;
+    text-shadow:0 0 8px rgba(255,160,60,.5);pointer-events:none;z-index:12;font-variant-numeric:tabular-nums}
+  #perfStats{position:absolute;right:22px;top:48px;font-size:13px;color:#7ea7c8;font-variant-numeric:tabular-nums;line-height:1.5;text-align:right}
+
+  /* 飞机指示器（敌红/友蓝，复用同一套菱形标记） */
+  #markers{position:absolute;inset:0;pointer-events:none;z-index:9}
+  .planeMarker{position:absolute;pointer-events:none;transform:translate(-50%,-50%);
+    display:flex;flex-direction:column;align-items:center;transition:opacity .1s;opacity:0}
+  .planeMarker .diamond{width:14px;height:14px;border:2px solid;transform:rotate(45deg)}
+  .planeMarker .distance{margin-top:8px;font-size:12px;font-weight:bold;
+    text-shadow:0 1px 3px rgba(0,0,0,.8);font-family:monospace;letter-spacing:1px}
+  .planeMarker.foe .diamond{border-color:#ff4230;box-shadow:0 0 8px #ff4230;background:rgba(255,66,48,.2)}
+  .planeMarker.foe .distance{color:#ff8a7a}
+  .planeMarker.ally .diamond{border-color:#3fa7ff;box-shadow:0 0 8px #3fa7ff;background:rgba(63,167,255,.18)}
+  .planeMarker.ally .distance{color:#8fc9ff}
+
+  #banner{position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);font-size:46px;font-weight:700;
+    letter-spacing:8px;color:#fff;text-shadow:0 0 18px rgba(120,200,255,.9),0 2px 6px rgba(0,0,0,.6);
+    opacity:0;transition:opacity .2s;white-space:nowrap}
+  #subBanner{position:absolute;left:50%;top:calc(30% + 46px);transform:translateX(-50%);font-size:16px;color:#9fd8ff;opacity:0;transition:opacity .2s}
+  #warn{position:absolute;left:50%;top:22%;transform:translateX(-50%);font-size:18px;color:#ffb347;
+    text-shadow:0 0 10px rgba(255,160,40,.7);opacity:0;transition:opacity .2s;letter-spacing:2px}
+  #dmgFlash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:8;
+    background:radial-gradient(ellipse at center,transparent 40%,rgba(255,30,20,.55) 100%)}
+  #zoomTip{position:absolute;right:22px;bottom:22px;font-size:12px;color:#5d82a0;text-align:right;line-height:1.8}
+  body.touch #zoomTip{display:none}
+  body.touch #stats{left:12px;bottom:200px;min-width:190px;padding:8px 10px}
+  body.touch #foeStats{top:8px;width:260px}
+
+  /* ---------- 触屏控件 ---------- */
+  #steerZone{position:fixed;inset:0;z-index:5;display:none}
+  body.touch #steerZone{display:block}
+  #touchUI{position:fixed;inset:0;z-index:15;pointer-events:none;display:none}
+  #touchUI.on{display:block}
+  #joyBase{position:absolute;left:34px;bottom:56px;width:128px;height:128px;border-radius:50%;
+    border:2px solid rgba(140,220,255,.45);background:rgba(10,25,45,.4);pointer-events:auto}
+  #joyBase::after{content:"飞行";position:absolute;left:50%;top:-22px;transform:translateX(-50%);
+    font-size:12px;color:#9fd8ff;letter-spacing:2px}
+  #joyKnob{position:absolute;left:50%;top:50%;width:54px;height:54px;border-radius:50%;
+    background:rgba(140,220,255,.55);border:2px solid rgba(200,240,255,.8);
+    transform:translate(-50%,-50%);box-shadow:0 0 12px rgba(120,220,255,.5)}
+  .tBtn{position:absolute;border-radius:50%;pointer-events:auto;display:flex;align-items:center;
+    justify-content:center;letter-spacing:2px;color:#fff}
+  #btnFire{right:42px;bottom:60px;width:98px;height:98px;font-size:18px;
+    background:rgba(255,80,60,.32);border:2px solid rgba(255,120,100,.75);box-shadow:0 0 16px rgba(255,90,70,.35)}
+  #btnFire:active{background:rgba(255,80,60,.55)}
+  #btnZoom{right:164px;bottom:172px;width:64px;height:64px;font-size:14px;
+    background:rgba(90,160,255,.28);border:2px solid rgba(140,200,255,.6)}
+  #btnZoom:active{background:rgba(90,160,255,.5)}
+  /* 语音按钮：右上竖排（瞄准键正上方）——避开左下摇杆、左侧血条面板、右侧开火/瞄准键 */
+  .vBtn{display:none;width:62px;height:62px;font-size:12px;line-height:1.25;letter-spacing:1px;
+    background:rgba(16,38,66,.5);border:2px solid rgba(140,200,255,.55);color:#dff1ff}
+  .vBtn.on{background:rgba(24,150,105,.62);border-color:rgba(150,255,205,.95);color:#eafff6;
+    box-shadow:0 0 14px rgba(60,220,150,.4)}
+  #btnMic{right:164px;bottom:240px}
+  #btnRx{right:164px;bottom:308px}
+
+  /* ---------- 覆盖层 ---------- */
+  .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:30;
+    background:rgba(240,242,245,.9)}
+  /* 沉浸式主菜单：3D 展示场景可见，仅玻璃控件 */
+  #menu{background:rgba(240,242,245,.14)}
+  .menuTop{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;
+    padding:16px 22px;z-index:5;pointer-events:none}
+  .menuTop>*{pointer-events:auto}
+  .menuLogo{display:flex;align-items:center;gap:9px;font-size:21px;font-weight:800;letter-spacing:5px;color:#1e293b;
+    text-shadow:0 2px 14px rgba(255,255,255,.95),0 4px 22px rgba(255,255,255,.6)}
+  .menuLogo svg{filter:drop-shadow(0 3px 8px rgba(37,99,235,.35))}
+  .menuGmBar{position:absolute;top:70px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5;
+    background:rgba(255,255,255,.6);backdrop-filter:blur(16px) saturate(1.8);border:1px solid rgba(255,255,255,.9);
+    border-radius:999px;padding:5px;box-shadow:0 12px 34px rgba(0,0,0,.12)}
+  .gmPill{border:1px solid transparent;border-radius:999px;padding:9px 24px;font-size:14px;letter-spacing:2px;color:#475569;
+    background:transparent;cursor:pointer;transition:all .18s;font-family:inherit}
+  .gmPill:hover{color:#1e293b}
+  .gmPill.on{color:#1e293b;background:rgba(255,255,255,.92);border-color:rgba(255,255,255,1);
+    box-shadow:0 6px 18px rgba(0,0,0,.12)}
+  .menuBottom{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:center;gap:18px;
+    padding:28px 20px 36px;z-index:5}
+  .bigPill{border:1px solid rgba(255,255,255,.95);border-radius:999px;padding:16px 42px;font-size:17px;letter-spacing:3px;
+    color:#1e293b;background:linear-gradient(135deg,rgba(255,255,255,.78),rgba(255,255,255,.34));
+    backdrop-filter:blur(18px) saturate(1.95);cursor:pointer;position:relative;
+    transition:all .18s;font-family:inherit;box-shadow:0 12px 32px rgba(0,0,0,.1),inset 0 1.5px 0 rgba(255,255,255,.95),inset 0 -5px 12px rgba(56,189,248,.2)}
+  .bigPill:hover{background:rgba(255,255,255,.92);transform:translateY(-3px);box-shadow:0 18px 44px rgba(0,0,0,.16)}
+  .bigPill:active{transform:translateY(0)}
+  .ghostPill{border:1px solid rgba(255,255,255,.95);border-radius:999px;padding:8px 20px;font-size:13px;letter-spacing:2px;
+    color:#334155;background:linear-gradient(135deg,rgba(255,255,255,.75),rgba(255,255,255,.35));
+    backdrop-filter:blur(16px) saturate(1.9);cursor:pointer;transition:all .16s;position:relative;
+    box-shadow:0 8px 20px rgba(0,0,0,.07),inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -3px 8px rgba(56,189,248,.14);font-family:inherit}
+  .ghostPill:hover{background:rgba(255,255,255,.95);transform:translateY(-1px)}
+  /* [ANDROID] v0.3.4 面板滚动重构（根治"底部按钮要点一下才显示"）：
+     ① 回滚 v0.3.3 的 will-change/translateZ——合成层滚动在 WebView 上瓦片光栅化更慢，反而加重；
+     ② 外层 .glassPanel 只做定位/圆角/阴影，overflow:hidden 不滚动（圆角+阴影+滚动同元素会走
+        WebView 慢路径，瓦片不更新）；③ 滚动交给内层 .panelScroll（无圆角无阴影纯滚动）；
+     ④ 底部按钮行移出滚动区固定在面板底部——按钮永远可见，不再依赖滚动位置 */
+  .glassPanel{position:fixed;inset:0;margin:auto;width:min(600px,94vw);
+    max-height:88vh;display:flex;flex-direction:column;overflow:hidden;
+    background:rgba(255,255,255,.97);border:1px solid rgba(226,232,240,.9);border-radius:18px;
+    box-shadow:0 24px 70px rgba(0,0,0,.22);z-index:40;padding:18px 22px 14px}
+  .panelScroll{flex:1 1 auto;min-height:0;overflow-y:auto;touch-action:pan-y;
+    margin:0 -6px;padding:0 6px}
+  .glassPanel .btnRow{flex:0 0 auto}
+  #menuBoxBody{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    width:auto;max-height:none;overflow:visible;z-index:6}
+  .menuBox{width:min(680px,94vw);max-height:92vh;overflow:auto;
+    background:linear-gradient(135deg,rgba(255,255,255,.95),rgba(255,255,255,.88));
+    border:1px solid rgba(226,232,240,.95);border-radius:22px;padding:30px 38px;position:relative;
+    box-shadow:0 24px 70px rgba(0,0,0,.2)}
+  .menuBox::before{content:"";position:absolute;top:0;left:10%;right:10%;height:42%;border-radius:22px;
+    background:linear-gradient(180deg,rgba(255,255,255,.4),transparent);pointer-events:none}
+  .menuBox::after{content:"";position:absolute;top:0;left:24%;width:52%;height:1.5px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);pointer-events:none}
+  #logoWrap{display:flex;justify-content:center;margin-bottom:6px}
+  #logoWrap svg{filter:drop-shadow(0 6px 16px rgba(37,99,235,.2))}
+  @keyframes titleGlow{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+  .menuBox h1{font-size:40px;letter-spacing:12px;text-align:center;color:var(--app-text);
+    animation:titleGlow 3s ease-in-out infinite}
+  .menuBox .sub{text-align:center;color:var(--app-muted);font-size:13px;letter-spacing:4px;margin:10px 0 24px}
+  .menuBox .sub b{color:var(--app-accent);font-weight:700;padding:1px 8px;border-radius:8px;background:rgba(37,99,235,.1)}
+  .btnRow{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+  /* 所有按钮统一毛玻璃（无填充色） */
+  button{pointer-events:auto;cursor:pointer;font-size:15px;letter-spacing:2px;color:#1e293b;
+    background:linear-gradient(135deg,rgba(255,255,255,.72),rgba(255,255,255,.32));backdrop-filter:blur(14px) saturate(1.9);
+    border:1px solid rgba(255,255,255,.9);border-radius:12px;padding:12px 22px;position:relative;
+    transition:all .16s;box-shadow:0 8px 22px rgba(0,0,0,.08),inset 0 1.5px 0 rgba(255,255,255,.9),inset 0 -4px 10px rgba(56,189,248,.16)}
+  button:hover{background:rgba(255,255,255,.85);transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.13)}
+  button:active{transform:translateY(0)}
+  button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+  button.small{font-size:12px;padding:6px 12px;letter-spacing:1px;box-shadow:0 6px 16px rgba(0,0,0,.06)}
+  .sigPanel{border-top:1px dashed var(--app-border);padding-top:16px;margin-top:6px}
+  .sigPanel h3{font-size:17px;color:var(--app-text);letter-spacing:3px;margin-bottom:8px;text-align:center}
+  .sigPanel .step{font-size:12px;color:var(--app-muted);margin:8px 0 4px;line-height:1.6}
+  textarea{pointer-events:auto;width:100%;height:64px;resize:none;font-size:11px;color:var(--app-text);
+    background:rgba(255,255,255,.75);border:1px solid rgba(37,99,235,.16);border-radius:10px;padding:8px;font-family:monospace}
+  .status{font-size:13px;color:var(--app-accent);min-height:20px;margin-top:6px;text-align:center}
+  .help{margin-top:20px;font-size:12.5px;color:var(--app-muted);line-height:2;border-top:1px dashed var(--app-border);padding-top:14px}
+  .help b{color:var(--app-text);display:inline-block;min-width:150px}
+  .menuFooter{text-align:center;margin-top:16px;font-size:11px;color:#94a3b8;letter-spacing:1px}
+  .verTag{display:inline-block;margin-left:8px;padding:1px 8px;font-size:10px;letter-spacing:1px;color:var(--app-accent);
+    border:1px solid rgba(37,99,235,.35);border-radius:8px;background:rgba(37,99,235,.08);vertical-align:middle}
+  .zoomInfo{display:inline-block;margin-left:8px;padding:3px 12px;font-size:11px;letter-spacing:1px;color:#334155;
+    border:1px solid rgba(255,255,255,.95);border-radius:999px;background:rgba(255,255,255,.6);
+    backdrop-filter:blur(12px) saturate(1.8);box-shadow:0 6px 16px rgba(0,0,0,.07);
+    font-variant-numeric:tabular-nums;vertical-align:middle}
+  #pause .menuBox{text-align:center}
+
+  /* 地图卡片 */
+  .mapChoice{display:flex;gap:16px;justify-content:center;margin:18px 0}
+  .mapCard{flex:1;max-width:220px;padding:18px 14px;border:1.5px solid var(--app-border);border-radius:20px;
+    cursor:pointer;text-align:center;transition:all .16s;background:rgba(255,255,252,.85);pointer-events:auto;
+    box-shadow:0 10px 30px rgba(0,0,0,.06)}
+  .mapCard:hover{border-color:var(--app-accent);background:#fff;transform:translateY(-3px);
+    box-shadow:0 16px 40px rgba(0,0,0,.1)}
+  .mapCard.sel{border-color:var(--app-accent);background:rgba(37,99,235,.08);box-shadow:0 0 0 3px rgba(37,99,235,.22)}
+  .mapCard .mapName{font-size:15px;color:var(--app-text);font-weight:bold;margin-bottom:6px}
+  .mapCard .mapDesc{font-size:11px;color:var(--app-muted);line-height:1.5}
+  /* 选阵营 */
+  #pickPanel .menuBox{width:min(580px,92vw)}
+  .pickSides{display:flex;gap:16px;margin:20px 0 12px}
+  .pickSide{flex:1;position:relative;padding:24px 14px;border:1.5px solid var(--app-border);border-radius:20px;
+    background:rgba(255,255,252,.85);cursor:pointer;transition:all .18s;overflow:hidden;text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.06)}
+  .pickSide:hover{border-color:var(--app-lilac);background:#fff;transform:translateY(-3px)}
+  .pickSide.sel{border-color:var(--app-accent);background:rgba(37,99,235,.08);box-shadow:0 0 0 3px rgba(37,99,235,.22)}
+  .pickSide .pickShade{position:absolute;inset:0;background:rgba(117,116,108,.4);opacity:0;transition:opacity .2s;pointer-events:none;z-index:2}
+  .pickSide.full .pickShade{opacity:1}
+  .pickSide .pickName{font-size:17px;color:var(--app-text);font-weight:bold;letter-spacing:2px;margin-bottom:12px}
+  .pickSide .pickBar{height:8px;background:rgba(27,27,25,.1);border-radius:4px;overflow:hidden;margin-bottom:7px}
+  .pickSide .pickFill{height:100%;width:0%;transition:width .2s;background:linear-gradient(90deg,#10b981,#34d399)}
+  .pickSide.side1 .pickFill{background:linear-gradient(90deg,#f43f5e,#fb923c)}
+  .pickSide .pickCount{font-size:13px;color:var(--app-muted);font-variant-numeric:tabular-nums}
+  .pickSide.full .pickName{color:#a09f95}
+  .pickSide.full .pickCount{color:#a09f95}
+  .sizeChoice{display:flex;gap:14px;justify-content:center;margin:16px 0}
+  .sizeCard{flex:1;max-width:170px;padding:14px 10px;border:1.5px solid var(--app-border);border-radius:18px;
+    background:rgba(255,255,252,.85);cursor:pointer;transition:all .18s;text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.06)}
+  .sizeCard:hover{border-color:var(--app-accent);background:#fff;transform:translateY(-3px)}
+  .sizeCard.sel{border-color:var(--app-accent);background:rgba(37,99,235,.08);box-shadow:0 0 0 3px rgba(37,99,235,.22)}
+  .sizeCard .sizeName{font-size:18px;color:var(--app-text);font-weight:bold;margin-bottom:4px}
+  .sizeCard .sizeDesc{font-size:11px;color:var(--app-muted)}
+
+  /* 玩法切换 / 阵营选择 */
+  .gmChoice{display:flex;gap:14px;justify-content:center;margin:0 0 18px}
+  .gmCard{flex:1;max-width:200px;padding:14px 12px;border:1.5px solid var(--app-border);border-radius:18px;
+    background:rgba(255,255,252,.85);cursor:pointer;transition:all .18s;text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.06)}
+  .gmCard:hover{border-color:var(--app-accent);background:#fff;transform:translateY(-3px)}
+  .gmCard.sel{border-color:var(--app-accent);background:rgba(37,99,235,.08);box-shadow:0 0 0 3px rgba(37,99,235,.22)}
+  .gmCard .gmName{font-size:15px;color:var(--app-text);font-weight:bold;margin-bottom:4px;letter-spacing:2px}
+  .gmCard .gmDesc{font-size:11px;color:var(--app-muted)}
+  .sideChoice{display:flex;gap:14px;justify-content:center;margin:14px 0}
+  .sideCard{flex:1;max-width:200px;padding:16px 12px;border:1.5px solid var(--app-border);border-radius:18px;
+    background:rgba(255,255,252,.85);cursor:pointer;transition:all .18s;text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.06)}
+  .sideCard:hover{border-color:var(--app-lilac);background:#fff;transform:translateY(-3px)}
+  .sideCard.sel{border-color:var(--app-accent);background:rgba(37,99,235,.08);box-shadow:0 0 0 3px rgba(37,99,235,.22)}
+  .sideCard .sideName{font-size:15px;color:var(--app-text);font-weight:bold;margin-bottom:4px;letter-spacing:1px}
+  .sideCard .sideDesc{font-size:11px;color:var(--app-muted);line-height:1.5}
+
+  kbd{background:rgba(37,99,235,.1);border:1px solid rgba(205,243,78,.6);border-radius:5px;padding:1px 7px;font-family:inherit;font-size:12px;color:var(--app-text)}
+
+  /* [ANDROID] 设置面板 */
+  .setRow{display:flex;align-items:center;gap:14px;margin:16px 0;font-size:14px;color:var(--app-text)}
+  .setRow .setName{letter-spacing:1px;min-width:96px;flex-shrink:0}
+  .setRow input[type=range]{flex:1;accent-color:var(--app-accent);pointer-events:auto}
+  .setRow .setVal{min-width:56px;text-align:right;font-variant-numeric:tabular-nums;color:var(--app-accent);font-weight:600}
+  .setRow button.small{min-width:56px}
+  .setTip{font-size:11.5px;color:var(--app-muted);line-height:1.7;margin-top:6px;text-align:center}
+  /* [ANDROID] v0.3.4：辅助瞄准设置项已删除（segGroup/segBtn CSS 随之移除） */
+  /* [ANDROID] 面板滚动修复：全局 touch-action:none 会禁掉 overflow:auto 容器的手势滚动 */
+  .glassPanel,.menuBox,#menuBoxBody,textarea{touch-action:pan-y}
+  /* [ANDROID] v0.3.3：右上角✕已删除（与底部关闭键功能重复），面板标题直接居中 */
+  /* [ANDROID] 键位布局编辑模式：隐藏主菜单（否则菜单层盖住控件收不到触摸）、独立深色画布背景 */
+  .layoutEdit #menu{display:none!important}
+  .layoutEdit #touchUI{display:block;z-index:60;
+    background:radial-gradient(circle at 50% 26%,rgba(37,99,235,.22),transparent 60%),linear-gradient(180deg,#101d33,#0a1424)}
+  .layoutEdit #touchUI::after{content:"键位布局编辑 · 拖动控件改位置，点选后用滑条改大小";
+    position:absolute;top:16px;left:50%;transform:translateX(-50%);font-size:14px;letter-spacing:2px;
+    color:#9fd8ff;white-space:nowrap;pointer-events:none}
+  .layoutEdit .vBtn{display:flex!important}
+  .layoutEdit #touchUI .tBtn,.layoutEdit #touchUI #joyBase{outline:2px dashed rgba(96,180,255,.9);outline-offset:5px}
+  .layoutEdit #touchUI .laySel{outline:3px solid #ff6b5e;outline-offset:5px}
+  #layoutBar{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);display:flex;align-items:center;gap:10px;
+    background:rgba(255,255,255,.88);backdrop-filter:blur(16px) saturate(1.8);border:1px solid rgba(255,255,255,.95);
+    border-radius:999px;padding:10px 18px;z-index:200;box-shadow:0 12px 34px rgba(0,0,0,.16);pointer-events:auto}
+  #layoutBar.hidden{display:none}
+  #layoutBar input[type=range]{width:130px;accent-color:var(--app-accent);pointer-events:auto}
+  #laySelName{font-size:12px;color:#334155;letter-spacing:1px;white-space:nowrap}
+
+  /* ---- 菜单进场动画（进入游戏时级联） ---- */
+  body.playing #menu .menuTop,body.playing #menu .menuGmBar,body.playing #menu .menuBottom{animation:menuIn .7s cubic-bezier(.2,.7,.3,1.1) backwards}
+  body.playing #menu .menuTop{animation-delay:.15s}
+  body.playing #menu .menuGmBar{animation-delay:.32s}
+  body.playing #menu .menuBottom{animation-delay:.48s}
+  @keyframes menuIn{from{opacity:0;transform:translateY(34px)}to{opacity:1;transform:none}}
+</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.min.js" } }
+</script>
+<!-- 错误捕获层：把 JS 错误显示在页面顶部（诊断加载失败用） -->
+<script>
+window.addEventListener('error', function(e) {
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b91c1c;color:#fff;padding:8px 12px;font:12px/1.5 monospace;white-space:pre-wrap;border-bottom:2px solid #fca5a5';
+  d.textContent = 'JS错误: ' + e.message + ' \n@ ' + (e.filename||'').split('/').pop() + ':' + e.lineno + ':' + e.colno;
+  document.body.appendChild(d);
+});
+window.addEventListener('unhandledrejection', function(e) {
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:60px;left:0;right:0;z-index:99999;background:#7c2d12;color:#fff;padding:8px 12px;font:12px/1.5 monospace;white-space:pre-wrap';
+  d.textContent = 'Promise错误: ' + (e.reason && (e.reason.message || e.reason) || '');
+  document.body.appendChild(d);
+});
+</script>
+</head>
+<body class="playing">
+<canvas id="c"></canvas>
+<div id="steerZone"></div>
+
+<!-- HUD -->
+<div id="hud" class="hidden">
+  <div id="crosshair"></div>
+  <div id="planeReticle"></div>
+  <div id="hitmark"></div>
+  <div id="partHit"></div>
+  <div id="markers"></div>
+  <!-- 多人状态栏：两队队员血量，死亡变灰 -->
+  <div id="rosterPanel" class="hidden">
+    <div class="rosterRow"><span class="rosterTag mine">我方</span><span class="rosterUnits" id="rosterMineUnits"></span></div>
+    <div class="rosterRow"><span class="rosterTag foe">敌方</span><span class="rosterUnits" id="rosterFoeUnits"></span></div>
+  </div>
+  <!-- 击杀数（右上角） -->
+  <div id="killCount">击杀 <span id="killVal">0</span></div>
+  <div id="foeStats" class="panelBox">
+    <div class="name">敌方</div>
+    <div class="barOuter"><div id="foeHpFill" class="barFill"></div></div>
+    <div id="scoreLine">我 <span class="pips" id="pipsMe"></span><b id="scoreText">0 : 0</b><span class="pips" id="pipsFoe"></span> 敌</div>
+    <div id="roundLabel">第 1 回合</div>
+  </div>
+  <div id="perfStats">FPS: <span id="fpsVal">60</span><br><span id="pingValText"></span></div>
+  <div id="stats" class="panelBox">
+    <span class="label" id="hpLabel">机体结构</span>
+    <div class="barOuter"><div id="hpFill" class="barFill"></div></div>
+    <span class="num">速度 <b id="speedVal">0</b> km/h</span>
+    <span class="num">高度 <b id="altVal">0</b> m</span>
+  </div>
+  <div id="banner"></div>
+  <div id="subBanner"></div>
+  <div id="warn"></div>
+  <div id="zoomTip">鼠标 控制视角 · 飞机自动跟随<br>左键 机炮 / 右键 瞄准 · W加速 S减速 · M静音</div>
+</div>
+<div id="dmgFlash"></div>
+
+<!-- 触屏控件 -->
+<div id="touchUI">
+  <div id="joyBase"><div id="joyKnob"></div></div>
+  <div class="tBtn" id="btnZoom">瞄准</div>
+  <div class="tBtn" id="btnFire">开火</div>
+  <!-- 语音（手机端没有 T/Y 键，这里给触屏按钮） -->
+  <div class="tBtn vBtn" id="btnMic">麦克风</div>
+  <div class="tBtn vBtn" id="btnRx">收听</div>
+</div>
+
+<!-- 主菜单 / 联机：3D 展示场景 + 玻璃药丸控件 -->
+<div id="menu" class="overlay">
+  <!-- 顶部：设置（左）+ 帮助 + logo + 版本 + 缩放信息（右） -->
+  <div class="menuTop">
+    <button class="ghostPill" id="btnSettings">设置</button>
+    <button class="ghostPill" id="btnHelp">帮助</button>
+    <div class="menuLogo"><svg width="30" height="30" viewBox="0 0 64 64"><defs><linearGradient id="lgPlane" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#38bdf8"/><stop offset="1" stop-color="#2563eb"/></linearGradient></defs><path d="M32 9 C34 16 35 21 36 26 L53 39 L53 44 L36 37 L36 46 L43 51 L43 55 L32 51.5 L21 55 L21 51 L28 46 L28 37 L11 44 L11 39 L28 26 C29 21 30 16 32 9 Z" fill="url(#lgPlane)"/></svg>苍穹对决</div>
+    <span class="verTag" id="verTag"></span>
+    <span class="zoomInfo" id="menuZoomInfo">1.0×</span>
+  </div>
+  <!-- 玩法切换（顶部药丸） -->
+  <div class="menuGmBar" id="menuGmTabs">
+    <button class="gmPill on" data-gm="dogfight">空战对决</button>
+    <button class="gmPill" data-gm="aavs">防空车突袭</button>
+  </div>
+  <!-- 底部：主按钮（药丸） -->
+  <div class="menuBottom">
+    <button class="bigPill" id="btnPractice">练习模式</button>
+    <button class="bigPill" id="btnHost">创建房间</button>
+    <button class="bigPill" id="btnJoin">加入房间</button>
+  </div>
+
+  <!-- 二级面板容器（点主按钮后弹出） -->
+  <div class="menuBox" id="menuBoxBody" style="display:none">
+    <div id="practicePanel" class="sigPanel hidden">
+      <h3>练习模式</h3>
+      <div id="aavsSideChoice" class="hidden">
+        <div class="sideChoice">
+          <div class="sideCard" data-side="plane"><div class="sideName">✈ 飞机突袭</div><div class="sideDesc">驾驶战机<br>击爆敌方防空车</div></div>
+          <div class="sideCard" data-side="aagun"><div class="sideName">🛡 防空拦截</div><div class="sideDesc">操控高炮车<br>击落来袭战机</div></div>
+        </div>
+      </div>
+      <div id="practiceMapChoice">
+        <div class="mapChoice">
+          <div class="mapCard" data-map="island"><div class="mapName">太平洋海岛</div><div class="mapDesc">碧海岛屿<br>山峰掩体</div></div>
+          <div class="mapCard" data-map="city"><div class="mapName">现代都市</div><div class="mapDesc">摩天楼群<br>穿城运河</div></div>
+        </div>
+      </div>
+      <div class="status" id="practiceStatus">点击地图即可开始</div>
+      <div class="btnRow" style="justify-content:flex-start"><button class="small" id="btnBackFromPractice">返回</button></div>
+    </div>
+
+    <div id="hostPanel" class="sigPanel hidden">
+      <h3 id="hostPanelTitle">创建房间 · 选择规模</h3>
+      <div id="hostSideChoice" class="hidden">
+        <div class="sizeChoice">
+          <div class="sideCard" data-side="plane"><div class="sideName">✈ 飞机阵营</div><div class="sideDesc">驾驶战机<br>击爆敌方防空车</div></div>
+          <div class="sideCard" data-side="aagun"><div class="sideName">🛡 防空车阵营</div><div class="sideDesc">操控高炮车<br>击落来袭战机</div></div>
+        </div>
+      </div>
+      <div class="sizeChoice" id="hostSizeChoice">
+        <div class="sizeCard" data-size="1v1"><div class="sizeName">1v1</div><div class="sizeDesc">双人对决</div></div>
+        <div class="sizeCard" data-size="3v3"><div class="sizeName">3v3</div><div class="sizeDesc">六人组队</div></div>
+        <div class="sizeCard" data-size="5v5"><div class="sizeName">5v5</div><div class="sizeDesc">十人决战</div></div>
+      </div>
+      <div id="hostOfferRow" class="hidden">
+        <h3 style="margin-top:10px">邀请码</h3>
+        <div class="step">第 1 步：生成邀请码，复制后发给所有好友</div>
+        <div class="btnRow" style="justify-content:flex-start">
+          <button class="small" id="btnGenOffer">生成邀请码</button>
+          <button class="small" id="copyOffer">复制</button>
+        </div>
+        <textarea id="taOffer" readonly placeholder="邀请码将显示在这里"></textarea>
+        <div class="step">第 2 步：每个好友各自粘贴邀请码生成应答码，把应答码发回给你，逐个粘贴连接</div>
+        <textarea id="taAnswerHost" placeholder="粘贴好友的应答码"></textarea>
+        <div class="btnRow" style="justify-content:flex-start">
+          <button class="small" id="btnConnHost">连接此人</button>
+          <span class="status" id="hostStatus" style="margin-left:8px"></span>
+        </div>
+      </div>
+      <div class="btnRow" style="justify-content:flex-start;margin-top:8px"><button class="small" id="btnBackFromHost">返回</button></div>
+    </div>
+
+    <div id="joinPanel" class="sigPanel hidden">
+      <h3>加入房间</h3>
+      <div class="step">第 1 步：粘贴好友的邀请码</div>
+      <textarea id="taOfferJoin" placeholder="粘贴邀请码"></textarea>
+      <div class="btnRow" style="justify-content:flex-start">
+        <button class="small" id="btnGenAnswer">生成应答码</button>
+        <button class="small" id="copyAnswer">复制</button>
+      </div>
+      <div class="step">第 2 步：把应答码发给好友</div>
+      <textarea id="taAnswerJoin" readonly placeholder="应答码将显示在这里"></textarea>
+      <div class="status" id="joinStatus"></div>
+      <div class="btnRow" style="justify-content:flex-start"><button class="small" id="btnBackFromJoin">返回</button></div>
+    </div>
+
+    <div id="mapLobbyPanel" class="sigPanel hidden">
+      <h3 id="mapLobbyTitle">选择空域</h3>
+      <div class="mapChoice" id="lobbyMapChoice">
+        <div class="mapCard" data-map="island">
+          <div class="mapName">太平洋海岛</div>
+          <div class="mapDesc">碧海岛屿<br>山峰掩体</div>
+        </div>
+        <div class="mapCard" data-map="city">
+          <div class="mapName">现代都市</div>
+          <div class="mapDesc">摩天楼群<br>穿城运河</div>
+        </div>
+      </div>
+      <div class="status" id="mapLobbyStatus">主机选择地图中…</div>
+    </div>
+  </div>
+
+  <!-- 帮助弹层（安卓特色版：以触屏操作为主） -->
+  <div id="helpPanel" class="glassPanel hidden">
+    <h3 style="text-align:center;margin:0 0 10px">操作说明（安卓版）</h3>
+    <div class="panelScroll">
+    <div class="help">
+      <b>✈ 飞机（空战模式）</b><br>
+      <b>屏幕滑动</b> 控制视角 / 瞄准（<b>小准星</b>=视角方向，<b>大准星</b>=机头实际朝向，两圈重合即完全跟随）。<br>
+      <b>左摇杆</b> 上下=加速 / 减速，左右=转向 / 平移；右侧按钮：<b>开火</b> 机炮、<b>瞄准</b> 按住放大。<br>
+      <br>
+      <b>🛡 防空车（防空作战模式）</b><br>
+      <b>屏幕滑动</b> 控制炮塔旋转 / 俯仰，<b>左摇杆</b> 左右=车体转向、上下=前后挪车，右侧<b>开火</b> 双管高射机枪（高射速带散布）。车是固定靶位打法：占好点、卡视野。<br>
+      <br>
+      <b>⚔ 战场规则</b><br>
+      · <b>撞击即毁</b>：撞海、撞地、撞楼、撞山都是立即爆炸，轻擦友机各扣少量血，飞机撞防空车 / 敌机相撞同归于尽。<br>
+      · <b>弱点打击</b>：飞机驾驶舱 3 倍伤害；防空车弹药箱 2 倍、炮塔 1.3 倍（车体血量 120）。机炮打防空车带溅射（近车或落地爆炸范围伤车）。<br>
+      · <b>空域限制</b>：飞出边界警告并持续扣血，超高同样警告；多人模式有友军伤害。<br>
+      · <b>敌我识别</b>：我方蓝色标记、敌方红色标记，屏幕内外菱形指示器全程追踪；右上角为你的击杀数（房主权威统计）。<br>
+      · <b>观战</b>：被击落后若队友还在战斗，自动进入观战视角：滑动环视、点按切换观战对象。<br>
+      · <b>语音</b>：右上角「麦克风 / 收听」按钮。首次开启会请求麦克风权限；外放时对方会听到你这边漏出的游戏音效，建议戴耳机。<br>
+      <br>
+      <b>🌐 联机模式</b><br>
+      房主创建房间（1v1 / 3v3 / 5v5）并选择地图（空战二选一：太平洋海岛 / 现代都市；防空作战固定军事基地图），全员同图开局。3v3/5v5 开局前全员选阵营，防空车 1v1 拼手速先抢先得。五局三胜，房主掉线全员判负。<br>
+      <br>
+      <b>📱 安卓版特色</b><br>
+      · 与网页版（game.4365754.xyz）<b>同一套游戏</b>：协议互通，安卓 ↔ 电脑网页版可直接联机对战。<br>
+      · 纯 WebRTC 直连、无服务器：<b>同一 WiFi 下最稳</b>；跨网络联机建议使用手机热点或接入同一网络。<br>
+      · 邀请码 / 应答码：<b>长按输入框</b>可呼出系统剪贴板进行复制粘贴；「复制」按钮一键复制整段邀请码。<br>
+      · 左上角<b>「设置」</b>可调整触屏灵敏度、画质（渲染精度）、阴影与音量。<br>
+      · <b>键位布局</b>：设置 →「键位布局」进入调整模式，拖动摇杆 / 按钮 改位置，选中后用滑条改大小，「完成并保存」生效。<br>
+      · <b>菜单场景</b>：主菜单 3D 展示可单指拖拽旋转视角、双指捏合缩放（右上角显示倍率）。<br>
+      · 系统返回键：帮助 / 设置 / 二级面板打开时按返回键直接关闭它们；主菜单按两次退出。<br>
+    </div>
+    </div>
+    <div class="btnRow" style="margin-top:12px;margin-bottom:0"><button class="small" id="btnCloseHelp">关闭</button></div>
+  </div>
+
+  <!-- 设置弹层（安卓特色：触屏灵敏度 / 画质 / 阴影 / 音量 / 键位布局；v0.3.4 删辅助瞄准项） -->
+  <div id="settingsPanel" class="glassPanel hidden">
+    <h3 style="text-align:center;margin:0 0 10px">设置</h3>
+    <div class="panelScroll">
+    <div class="setRow">
+      <span class="setName">触屏灵敏度</span>
+      <input type="range" id="setSens" min="0.8" max="3.0" step="0.1" value="1.7">
+      <span class="setVal" id="setSensVal">1.7</span>
+    </div>
+    <div class="setRow">
+      <span class="setName">画质精度</span>
+      <input type="range" id="setPixel" min="0.75" max="2" step="0.25" value="1.25">
+      <span class="setVal" id="setPixelVal">1.25×</span>
+    </div>
+    <div class="setRow">
+      <span class="setName">阴影</span>
+      <button class="small" id="setShadowBtn" style="flex:1">关</button>
+    </div>
+    <div class="setRow">
+      <span class="setName">音量</span>
+      <input type="range" id="setVol" min="0" max="100" step="5" value="55">
+      <span class="setVal" id="setVolVal">55%</span>
+    </div>
+    <div class="setRow">
+      <span class="setName">键位布局</span>
+      <button class="small" id="btnEditLayout" style="flex:1">调整按键位置 / 大小</button>
+    </div>
+    <div class="setTip">点「应用」保存并重启游戏（菜单页操作，不影响对局）；「恢复默认」还原网页版默认参数与键位</div>
+    </div>
+    <div class="btnRow" style="margin-top:12px;margin-bottom:0">
+      <button class="small" id="btnApplySettings">应用</button>
+      <button class="small" id="btnResetSettings">恢复默认</button>
+      <button class="small" id="btnCloseSettings">关闭</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- 选阵营（3v3/5v5 开局前） -->
+<div id="pickPanel" class="overlay hidden">
+  <div class="menuBox">
+    <h1 style="font-size:22px;letter-spacing:4px">选择阵营</h1>
+    <div class="pickSides">
+      <div class="pickSide" id="pickSide0">
+        <div class="pickName" id="pickName0">✈ 飞机</div>
+        <div class="pickBar"><div class="pickFill" id="pickFill0"></div></div>
+        <div class="pickCount" id="pickCount0">0 / 0</div>
+        <div class="pickShade"></div>
+      </div>
+      <div class="pickSide side1" id="pickSide1">
+        <div class="pickName" id="pickName1">🛡 防空车</div>
+        <div class="pickBar"><div class="pickFill" id="pickFill1"></div></div>
+        <div class="pickCount" id="pickCount1">0 / 0</div>
+        <div class="pickShade"></div>
+      </div>
+    </div>
+    <div class="sub" id="pickStatus">选择后不可更改 · 等待全员选择…</div>
+  </div>
+</div>
+
+<!-- 暂停 -->
+<div id="pause" class="overlay hidden">
+  <div class="menuBox">
+    <h1 style="font-size:24px;letter-spacing:4px">已暂停</h1>
+    <div class="sub" id="pauseText">点击任意处继续战斗 <span class="verTag" id="verTagPause"></span></div>
+  </div>
+</div>
+
+<!-- 结算 -->
+<div id="matchPanel" class="overlay hidden">
+  <div class="menuBox" style="text-align:center">
+    <h1 id="matchTitle" style="font-size:30px;letter-spacing:6px">胜利</h1>
+    <div class="sub" id="matchSub"></div>
+    <div class="btnRow" style="justify-content:center;margin-top:10px">
+      <button id="btnRematch">再来一局</button>
+      <button id="btnBackMenu">返回主菜单</button>
+    </div>
+  </div>
+</div>
+
+<!-- [ANDROID] 键位布局编辑工具条（编辑模式下显示在屏幕底部） -->
+<div id="layoutBar" class="hidden">
+  <span id="laySelName">拖动摇杆 / 按钮调整位置 · 点选后可调大小</span>
+  <input type="range" id="laySize" min="0.6" max="1.8" step="0.05" value="1">
+  <button class="small" id="layDone">完成并保存</button>
+  <button class="small" id="layCancel">取消</button>
+</div>
+
+<!-- [ANDROID] 设置面板逻辑（普通脚本，先于游戏模块执行；数据存 localStorage('sd_settings')） -->
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY = 'sd_settings';
+  var isCoarse = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
+  function loadSet() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } }
+  function defSet() { return { touchSens: 1.7, shadows: !isCoarse, pixel: isCoarse ? 1.25 : 2, vol: 55 }; }
+  function curSet() {
+    var d = defSet(), s = loadSet();
+    return {
+      touchSens: s.touchSens === undefined ? d.touchSens : parseFloat(s.touchSens),
+      shadows: s.shadows === undefined ? d.shadows : !!s.shadows,
+      pixel: s.pixel === undefined ? d.pixel : parseFloat(s.pixel),
+      vol: s.vol === undefined ? d.vol : parseFloat(s.vol)
+    };
+  }
+  var panel = $('settingsPanel');
+  function fill() {
+    var c = curSet();
+    $('setSens').value = c.touchSens; $('setSensVal').textContent = (+c.touchSens).toFixed(1);
+    $('setPixel').value = c.pixel; $('setPixelVal').textContent = (+c.pixel).toFixed(2) + '×';
+    $('setShadowBtn').textContent = c.shadows ? '开' : '关';
+    $('setVol').value = c.vol; $('setVolVal').textContent = Math.round(c.vol) + '%';
+  }
+  $('btnSettings').onclick = function () {
+    $('menuBoxBody').style.display = 'none';
+    var hp = $('helpPanel'); if (hp) hp.classList.add('hidden');
+    fill(); panel.classList.remove('hidden');
+    void panel.offsetHeight;   // 强制回流：配合合成层提升，确保面板首帧完整渲染（底部按钮即刻可见）
+  };
+  $('setSens').oninput = function () { $('setSensVal').textContent = (+this.value).toFixed(1); };
+  $('setPixel').oninput = function () { $('setPixelVal').textContent = (+this.value).toFixed(2) + '×'; };
+  $('setVol').oninput = function () { $('setVolVal').textContent = Math.round(this.value) + '%'; };
+  $('setShadowBtn').onclick = function () {
+    var c = curSet(); c.shadows = !c.shadows;
+    localStorage.setItem(KEY, JSON.stringify(c));
+    this.textContent = c.shadows ? '开' : '关';
+  };
+  $('btnApplySettings').onclick = function () {
+    var c = curSet();
+    c.touchSens = parseFloat($('setSens').value);
+    c.pixel = parseFloat($('setPixel').value);
+    c.vol = parseFloat($('setVol').value);
+    localStorage.setItem(KEY, JSON.stringify(c));
+    location.reload();   // 菜单页重载，让 main.js / audio.js 顶层的设置读取生效
+  };
+  $('btnResetSettings').onclick = function () { localStorage.removeItem(KEY); localStorage.removeItem('sd_layout'); location.reload(); };
+  $('btnCloseSettings').onclick = function () { panel.classList.add('hidden'); };
+
+  /* ---- 原生返回键桥：MainActivity 按返回键时先尝试关闭已打开的面板 ---- */
+  window.__sdHandleBack = function () {
+    var closed = false;
+    var sp = $('settingsPanel');
+    if (sp && !sp.classList.contains('hidden')) { sp.classList.add('hidden'); closed = true; }
+    var hp = $('helpPanel');
+    if (hp && !hp.classList.contains('hidden')) { hp.classList.add('hidden'); closed = true; }
+    var mb = $('menuBoxBody');
+    if (mb && mb.style.display !== 'none') { mb.style.display = 'none'; closed = true; }   // main.js 显示时置 ''，隐藏置 'none'
+    return closed;
+  };
+
+  /* ---- 键位布局编辑器：拖动改位置（百分比），选中后滑条改大小，存 localStorage('sd_layout') ---- */
+  var LKEY = 'sd_layout';
+  var LAYOUT_IDS = ['joyBase', 'btnFire', 'btnZoom', 'btnMic', 'btnRx'];
+  var LAYOUT_NAMES = { joyBase: '飞行摇杆', btnFire: '开火', btnZoom: '瞄准', btnMic: '麦克风', btnRx: '收听' };
+  function loadLayout() { try { return JSON.parse(localStorage.getItem(LKEY) || '{}'); } catch (e) { return {}; } }
+  function applyOne(id, c) {
+    var el = $(id); if (!el || !c) return;
+    el.style.right = 'auto'; el.style.bottom = 'auto';
+    el.style.left = c.x + '%'; el.style.top = c.y + '%';
+    el.style.transform = 'translate(-50%,-50%) scale(' + c.s + ')';
+  }
+  function applyAll(L) { for (var k in L) applyOne(k, L[k]); }
+  applyAll(loadLayout());   // 启动即应用已保存键位
+
+  var draft = null, selId = null, dragId = null, dragEl = null, dragOffX = 0, dragOffY = 0;
+  var bar = $('layoutBar'), sizeR = $('laySize'), nameEl = $('laySelName');
+  function curPct(el) {
+    var r = el.getBoundingClientRect();
+    return {
+      x: Math.round((r.left + r.width / 2) / window.innerWidth * 1000) / 10,
+      y: Math.round((r.top + r.height / 2) / window.innerHeight * 1000) / 10,
+      s: (draft && draft[el.id] && draft[el.id].s) || 1
+    };
+  }
+  function refreshSel() {
+    for (var i = 0; i < LAYOUT_IDS.length; i++) {
+      var el = $(LAYOUT_IDS[i]); if (!el) continue;
+      if (LAYOUT_IDS[i] === selId) el.classList.add('laySel'); else el.classList.remove('laySel');
+    }
+    if (selId && draft && draft[selId]) { sizeR.value = draft[selId].s; nameEl.textContent = LAYOUT_NAMES[selId] + '（拖动改位置 · 滑条改大小）'; }
+    else nameEl.textContent = '拖动摇杆 / 按钮调整位置 · 点选后可调大小';
+  }
+  function enterEdit() {
+    panel.classList.add('hidden');
+    draft = JSON.parse(JSON.stringify(loadLayout()));
+    selId = null; dragEl = null;
+    document.body.classList.add('layoutEdit');
+    $('touchUI').classList.add('on');
+    bar.classList.remove('hidden');
+    refreshSel();
+  }
+  function exitEdit(save) {
+    document.body.classList.remove('layoutEdit');
+    bar.classList.add('hidden');
+    $('touchUI').classList.remove('on');
+    for (var i = 0; i < LAYOUT_IDS.length; i++) { var el = $(LAYOUT_IDS[i]); if (el) el.classList.remove('laySel'); }
+    if (save) { localStorage.setItem(LKEY, JSON.stringify(draft)); }
+    location.reload();   // 保存或取消都重载：保存=应用新键位，取消=还原到已存状态
+  }
+  $('btnEditLayout').onclick = enterEdit;
+  $('layDone').onclick = function () { exitEdit(true); };
+  $('layCancel').onclick = function () { exitEdit(false); };
+  sizeR.oninput = function () {
+    if (!selId || !draft) return;
+    if (!draft[selId]) draft[selId] = curPct($(selId));
+    draft[selId].s = parseFloat(this.value);
+    applyOne(selId, draft[selId]);
+  };
+
+  function inLayoutUI(el) { return el && el.closest && el.closest('#touchUI .tBtn, #touchUI #joyBase, #layoutBar'); }
+  document.addEventListener('touchstart', function (e) {
+    if (!document.body.classList.contains('layoutEdit')) return;
+    var t = e.changedTouches[0];
+    var el = t.target && t.target.closest && t.target.closest('#touchUI .tBtn, #touchUI #joyBase');
+    if (el) {
+      e.stopPropagation(); e.preventDefault();
+      selId = el.id;
+      if (!draft[selId]) draft[selId] = curPct(el);
+      var r = el.getBoundingClientRect();
+      var s = draft[selId].s || 1;
+      dragOffX = (t.clientX - (r.left + r.width / 2)) / s;
+      dragOffY = (t.clientY - (r.top + r.height / 2)) / s;
+      dragEl = el; dragId = t.identifier;
+      refreshSel();
+      return;
+    }
+    if (!inLayoutUI(t.target)) { e.stopPropagation(); e.preventDefault(); }   // 编辑模式屏蔽其它交互
+  }, { capture: true, passive: false });
+  document.addEventListener('touchmove', function (e) {
+    if (!document.body.classList.contains('layoutEdit')) return;
+    for (var i = 0; i < e.changedTouches.length; i++) {
+      var t = e.changedTouches[i];
+      if (dragEl && t.identifier === dragId) {
+        e.stopPropagation(); e.preventDefault();
+        var c = draft[dragEl.id];
+        c.x = Math.round(Math.max(4, Math.min(96, (t.clientX - dragOffX) / window.innerWidth * 100)) * 10) / 10;
+        c.y = Math.round(Math.max(6, Math.min(94, (t.clientY - dragOffY) / window.innerHeight * 100)) * 10) / 10;
+        applyOne(dragEl.id, c);
+      }
+    }
+  }, { capture: true, passive: false });
+  document.addEventListener('touchend', function (e) {
+    if (!document.body.classList.contains('layoutEdit')) return;
+    for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === dragId) { dragEl = null; dragId = null; }
+  }, { capture: true, passive: false });
+  document.addEventListener('touchcancel', function () { dragEl = null; dragId = null; }, { capture: true, passive: true });
+})();
+</script>
+<script type="module" src="./js/main.js?v=8005"></script>
+</body>
+</html>

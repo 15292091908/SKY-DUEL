@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>零服务器联机：不花一分钱，怎么让十个人同屏狗斗？ · 苍穹对决技术专栏</title>
+<meta name="description" content="《苍穹对决》没有部署任何游戏服务器：解密纯 WebRTC DataChannel 点对点直连、手动信令交换、无 STUN/TURN 的取舍，以及 state/event 双通道设计。">
+<meta name="keywords" content="WebRTC,DataChannel,无服务器联机,P2P游戏,信令交换,苍穹对决,Sky Duel,网络同步">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#eef6fd">
+<meta property="og:type" content="article">
+<meta property="og:title" content="零服务器联机：不花一分钱，怎么让十个人同屏狗斗？">
+<meta property="og:description" content="解密《苍穹对决》的纯 WebRTC 点对点联机架构：手动信令、无 STUN/TURN、双通道设计。">
+<meta property="og:locale" content="zh_CN">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="canonical" href="https://game.4365754.xyz/articles/p2p/">
+<meta property="og:url" content="https://game.4365754.xyz/articles/p2p/">
+<meta property="og:image" content="https://game.4365754.xyz/favicon.svg">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "苍穹对决", "item": "https://game.4365754.xyz/" },
+        { "@type": "ListItem", "position": 2, "name": "技术专栏", "item": "https://game.4365754.xyz/#tech" },
+        { "@type": "ListItem", "position": 3, "name": "零服务器联机" }
+      ]
+    },
+    {
+      "@type": "BlogPosting",
+      "@id": "https://game.4365754.xyz/articles/p2p/#article",
+      "headline": "零服务器联机：不花一分钱，怎么让十个人同屏狗斗？",
+      "description": "解密《苍穹对决》的纯 WebRTC DataChannel 点对点直连、手动信令交换、无 STUN/TURN 的取舍，以及 state/event 双通道设计。",
+      "inLanguage": "zh-CN",
+      "datePublished": "2026-09-06",
+      "dateModified": "2026-09-06",
+      "author": { "@type": "Organization", "name": "Sky Duel", "url": "https://game.4365754.xyz/" },
+      "publisher": { "@type": "Organization", "name": "Sky Duel", "url": "https://game.4365754.xyz/", "logo": { "@type": "ImageObject", "url": "https://game.4365754.xyz/favicon.svg" } },
+      "mainEntityOfPage": "https://game.4365754.xyz/articles/p2p/",
+      "image": "https://game.4365754.xyz/favicon.svg",
+      "articleSection": "联机原理",
+      "isPartOf": { "@id": "https://game.4365754.xyz/#website" },
+      "about": { "@type": "VideoGame", "name": "苍穹对决", "alternateName": "Sky Duel", "url": "https://game.4365754.xyz/play/" }
+    }
+  ]
+}
+</script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--accent:#2563eb;--sky:#38bdf8;--text:#123a75;--body:#2e4c6e;--muted:#64748b;
+    --border:rgba(37,99,235,.12);--shadow:0 14px 36px rgba(0,0,0,.08)}
+  html{scroll-behavior:smooth}
+  body{background:#eef6fd;color:var(--text);font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(circle at 85% 6%,rgba(56,189,248,.14),transparent 24rem),
+      radial-gradient(circle at 8% 30%,rgba(37,99,235,.08),transparent 22rem)}
+  .topbar{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;
+    padding:13px 22px;background:rgba(238,246,253,.82);backdrop-filter:blur(14px) saturate(1.8);
+    border-bottom:1px solid var(--border)}
+  .back{display:inline-flex;align-items:center;gap:7px;text-decoration:none;font-size:13.5px;font-weight:bold;
+    color:#1d4ed8;background:rgba(255,255,255,.75);border:1px solid var(--border);border-radius:999px;
+    padding:8px 20px;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s}
+  .back:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(37,99,235,.22)}
+  .brand{font-weight:900;font-style:italic;letter-spacing:2px;color:#1d4ed8;font-size:15px;text-decoration:none}
+  .wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:58px 20px 60px}
+  .kicker{font-size:13px;font-style:italic;font-weight:900;color:#7cc4f5;letter-spacing:4px}
+  h1{font-size:clamp(28px,4vw,42px);font-weight:900;font-style:italic;letter-spacing:1px;line-height:1.35;margin:12px 0 12px;
+    background:linear-gradient(120deg,#123a75,#2563eb 60%,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .meta{font-size:13px;color:var(--muted);letter-spacing:1px;padding-bottom:22px;
+    border-bottom:1px solid var(--border);margin-bottom:34px}
+  .content h2{font-size:21px;font-weight:900;color:var(--text);margin:40px 0 14px;letter-spacing:1px;
+    padding-left:14px;border-left:4px solid var(--accent)}
+  .content p{font-size:16px;line-height:2.1;color:var(--body);margin:0 0 20px}
+  .content b{color:var(--accent)}
+  .content ul{margin:0 0 22px;padding-left:26px}
+  .content li{font-size:15.5px;line-height:2;color:var(--body);margin-bottom:10px}
+  .content li b{color:var(--accent)}
+  .callout{background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:16px;
+    padding:18px 22px;margin:0 0 22px;font-size:15px;line-height:2;color:var(--body)}
+  .pager{display:flex;justify-content:space-between;gap:14px;margin-top:64px;padding-top:28px;
+    border-top:1px solid var(--border);flex-wrap:wrap}
+  .pager a{flex:1;min-width:220px;text-decoration:none;background:rgba(255,255,255,.75);border:1px solid var(--border);
+    border-radius:16px;padding:16px 20px;box-shadow:var(--shadow);transition:transform .25s,box-shadow .25s}
+  .pager a:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(37,99,235,.2)}
+  .pager .dir{font-size:12px;color:var(--muted);letter-spacing:2px}
+  .pager .pt{font-weight:900;color:#1d4ed8;font-size:15px;margin-top:4px}
+  .pager .next{text-align:right}
+  footer{position:relative;z-index:1;text-align:center;padding:26px 20px 42px;color:#6b87a8;font-size:13px}
+  footer b{font-style:italic;color:#1d4ed8}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="back" href="/">← 返回首页</a>
+  <a class="brand" href="/#tech">SKY DUEL · 技术专栏</a>
+</div>
+<div class="wrap">
+  <div class="kicker">UNDER THE HOOD · 01</div>
+  <h1>零服务器联机：不花一分钱，怎么让十个人同屏狗斗？</h1>
+  <div class="meta">《苍穹对决》技术专栏 · 联机原理篇 · 约 2000 字 · 阅读 6 分钟</div>
+  <div class="content">
+    <p>绝大多数多人游戏的第一笔开销不是开发，而是机房：租服务器、付带宽、养运维。玩家越多，账单越厚，一旦停服，花再多钱买回来的游戏也会变成一块废铁。《苍穹对决》的选择是——<b>一台服务器都不部署</b>。听起来像天方夜谭：没有服务器，十个人怎么在同一片天空下狗斗？这一篇就从这个最反直觉的问题讲起。</p>
+
+    <h2>一、服务器的账单：传统网游的第一道门槛</h2>
+    <p>先弄清楚传统架构为什么离不开服务器。经典网游是<b>客户端—服务器</b>模型：每个玩家把操作发给服务器，服务器计算世界状态，再广播给所有人。它承担三件事——<b>转发</b>（消息中继）、<b>仲裁</b>（谁打中谁、谁先谁后）、<b>容灾</b>（断线重连、版本校验）。这三件事都要 7×24 小时在线的机器来扛，于是就有了机房、带宽和运维成本。</p>
+    <p>而对一款免费网页游戏来说，这笔固定成本尤其致命：没有买断收入，玩家量又天然波动，服务器要么常年空转烧钱，要么高峰期挤爆。更隐蔽的是连锁成本——为了防攻击要上高防，为了容灾要做多机房备份，为了合规要处理数据存储，每一项都是钱和人。《苍穹对决》的解法不是"优化成本"，而是直接质疑前提——这三件事，真的必须在机房里做吗？</p>
+
+    <h2>二、WebRTC：浏览器原生的直连管道</h2>
+    <p>答案藏在每台浏览器里。<b>WebRTC</b> 最广为人知的用途是网页视频通话，但它还提供一个更适合游戏的界面：<b>DataChannel 数据通道</b>——一条在两个浏览器之间建立的点对点连接，可以双向收发任意二进制数据，延迟特性与 UDP 相当。它由浏览器内核直接实现，不需要安装任何插件，也不需要任何一台中间服务器参与数据传输。</p>
+    <p>《苍穹对决》的所有联机流量都走这条管道：你的浏览器直达朋友的浏览器。子弹、爆炸、坠机、比分——每一比特数据都只在你们两台设备之间流动。<b>数据的传输路径，就是你们之间的那条网线</b>，绕不开，也省不掉——这恰恰是低延迟的来源。</p>
+    <p>值得强调的是 DataChannel 与 WebSocket 的本质区别。WebSocket 看起来也是浏览器里的"长连接"，但它的每一帧都要先发到服务器，再由服务器转发——它只是把"轮询"变成了"长连"，数据路径没有任何变化。DataChannel 则是真正的设备到设备：连接一旦建立，两台浏览器之间就存在一条旁路，不经过任何中间节点。对节奏以毫秒计的空战游戏来说，这个差别就是"跟手"与"漂移"的差别。</p>
+
+    <h2>三、没有信令服务器，怎么"认识"对方？</h2>
+    <p>WebRTC 建立连接前有个先有鸡还是先有蛋的问题：双方必须先交换一份"名片"——SDP 描述，写着自己支持什么编码、监听哪个地址——之后才能开始直连。交换名片这一步通常由<b>信令服务器</b>转发，而《苍穹对决》连这个也不用。</p>
+    <p>它的做法是把名片<b>压缩成一段邀请码文本</b>：房主点"创建房间"生成邀请码，复制后用微信、QQ 任意渠道发给好友；好友粘贴邀请码，生成一段应答码回传；房主粘贴应答码——两来两回，连接即成。整个"信令"过程由玩家的聊天工具代劳，零成本、零延迟敏感（名片只交换一次），换来的是彻底的零依赖：没有任何中心节点会宕机、会跑路、会收费。</p>
+    <p>这当然牺牲了一点便利性：不能像商业游戏那样一键匹配陌生人。但对一款"开黑"为核心的游戏来说，先把邀请码发到好友群里的动作，本来就存在。而且手动交换还有一个常被低估的好处：<b>交换方式完全由玩家自己决定</b>——面对面扫码、发微信群、写进邮件都行，信令通道天然冗余，永远不会"信令服务器维护中，无法连接"。</p>
+
+    <h2>四、为什么连 STUN 和 TURN 都不要</h2>
+    <p>熟悉 P2P 的读者会问：家里路由器都在 NAT 后面，两个内网地址怎么直连？业界的标准答案是 <b>STUN</b>（帮忙探测自己在公网的映射地址）和 <b>TURN</b>（直连失败时当中继兜底）。《苍穹对决》把 ICE 候选配置留空——<b>不用 STUN，也不用 TURN</b>。</p>
+    <p>这意味着浏览器只拿本机地址去尝试握手。在局域网联机和大多数家用网络环境下，握手都能直接成功；少数严格 NAT（如对称型 NAT）后会连不上。这是一次清醒的取舍：<b>牺牲一小部分复杂网络环境的兼容性，换回数据 100% 点对点</b>——没有打洞服务器记录你的地址，没有中继服务器能看到你的流量，也没有任何一个"必要环节"成为故障点。</p>
+    <p>从工程角度看，这个取舍还有一层含义：整个联机层的复杂度大幅下降。不需要维护 STUN 服务的可用性，不需要处理 TURN 中继的鉴权与流量计费，也不需要在打洞失败、中继成功、中继失败之间做状态机。一个空数组 <b>iceServers: []</b>，换来的是一条只需要测试"通与不通"两种状态的链路。</p>
+
+    <h2>五、双通道设计：快慢分明</h2>
+    <p>每条连接上开两条 DataChannel，各司其职，这是整个联机层最重要的设计决策：</p>
+    <ul>
+      <li><b>state 通道</b>：不可靠、不排序，20Hz 高频推送位置与姿态快照。丢了就丢了，绝不重传——因为下一帧马上就到，<b>最新状态永远比完整历史更有价值</b>。飞机位置、姿态、血量这些"越新越好"的数据全走这里。</li>
+      <li><b>event 通道</b>：可靠、有序，承载开火、死亡、回合切换、比分变更这类"一次都不能丢、顺序不能乱"的关键事件。慢一点没关系，但必须到达，且到达顺序与发送顺序严格一致。</li>
+    </ul>
+    <p>如果只有一条可靠通道，一次丢包重传会卡住后面所有状态更新，画面瞬间"倒放"；如果只有一条不可靠通道，"你死了"这个消息可能永远在路上。实时性交给前者，正确性交给后者——这是网络同步最经典的分治思路，也是后两篇文章一切机制的地基。</p>
+
+    <h2>六、零服务器的意外之喜：隐私与安全</h2>
+    <p>最后说一个容易被忽略的收益。<b>隐私</b>：没有服务器，就没有任何第三方存储你的 IP、设备信息和行为数据，对局结束后什么都不留。<b>公平</b>：传统网游里，服务器被 DDoS 就全员掉线；《苍穹对决》的对局没有"打掉就全掉"的靶子——想断掉一局 1v1，你得同时断掉两台玩家设备之间的直连。<b>寿命</b>：只要浏览器还支持 WebRTC，这个游戏的联机功能就永远可用，不存在"停服"这个概念。</p>
+    <div class="callout">当然，"没有服务器"不等于"没有规则"。连接建立之后，谁来解决"两发子弹同时命中"的仲裁问题？答案是一个你可能想不到的权威节点——下篇文章《房主小世界：你的浏览器就是服务器》。</div>
+  </div>
+  <div class="pager">
+    <a href="/" class="prev"><div class="dir">← 返回</div><div class="pt">苍穹对决 · 首页</div></a>
+    <a href="/articles/host-world/" class="next"><div class="dir">下一篇 →</div><div class="pt">房主小世界：你的浏览器就是服务器</div></a>
+  </div>
+</div>
+<footer><b>SKY DUEL</b> · 苍穹对决 — 纯前端 3D 空战网页游戏 · 技术专栏</footer>
+</body>
+</html>

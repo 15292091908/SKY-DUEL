@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>本地预判 + 权威回溯：高延迟也能指哪打哪 · 苍穹对决技术专栏</title>
+<meta name="description" content="解密《苍穹对决》市售网游级手感的核心：本地预判即时反馈、predTotal/lastAuth 双账本对账、dmgReject 权威回溯、350/400ms 延迟补偿专治幽灵弹。">
+<meta name="keywords" content="本地预判,客户端预测,权威回溯,延迟补偿,网络同步,服务器回滚,苍穹对决,Sky Duel">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#eef6fd">
+<meta property="og:type" content="article">
+<meta property="og:title" content="本地预判 + 权威回溯：高延迟也能指哪打哪">
+<meta property="og:description" content="市售网游手感的核心机密：本地预判即时反馈、权威快照对账回滚，延迟补偿专治幽灵弹。">
+<meta property="og:locale" content="zh_CN">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="canonical" href="https://game.4365754.xyz/articles/prediction/">
+<meta property="og:url" content="https://game.4365754.xyz/articles/prediction/">
+<meta property="og:image" content="https://game.4365754.xyz/favicon.svg">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "苍穹对决",
+          "item": "https://game.4365754.xyz/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "技术专栏",
+          "item": "https://game.4365754.xyz/#tech"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "本地预判 + 权威回溯"
+        }
+      ]
+    },
+    {
+      "@type": "BlogPosting",
+      "@id": "https://game.4365754.xyz/articles/prediction/#article",
+      "headline": "本地预判 + 权威回溯",
+      "description": "解密《苍穹对决》市售网游级手感的核心：本地预判即时反馈、predTotal/lastAuth 双账本对账、dmgReject 权威回溯、350/400ms 延迟补偿专治幽灵弹。",
+      "inLanguage": "zh-CN",
+      "datePublished": "2026-09-06",
+      "dateModified": "2026-09-06",
+      "author": {
+        "@type": "Organization",
+        "name": "Sky Duel",
+        "url": "https://game.4365754.xyz/"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Sky Duel",
+        "url": "https://game.4365754.xyz/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://game.4365754.xyz/favicon.svg"
+        }
+      },
+      "mainEntityOfPage": "https://game.4365754.xyz/articles/prediction/",
+      "image": "https://game.4365754.xyz/favicon.svg",
+      "articleSection": "网络同步",
+      "isPartOf": {
+        "@id": "https://game.4365754.xyz/#website"
+      },
+      "about": {
+        "@type": "VideoGame",
+        "name": "苍穹对决",
+        "alternateName": "Sky Duel",
+        "url": "https://game.4365754.xyz/play/"
+      }
+    }
+  ]
+}
+</script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--accent:#2563eb;--sky:#38bdf8;--text:#123a75;--body:#2e4c6e;--muted:#64748b;
+    --border:rgba(37,99,235,.12);--shadow:0 14px 36px rgba(0,0,0,.08)}
+  html{scroll-behavior:smooth}
+  body{background:#eef6fd;color:var(--text);font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(circle at 85% 6%,rgba(56,189,248,.14),transparent 24rem),
+      radial-gradient(circle at 8% 30%,rgba(37,99,235,.08),transparent 22rem)}
+  .topbar{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;
+    padding:13px 22px;background:rgba(238,246,253,.82);backdrop-filter:blur(14px) saturate(1.8);
+    border-bottom:1px solid var(--border)}
+  .back{display:inline-flex;align-items:center;gap:7px;text-decoration:none;font-size:13.5px;font-weight:bold;
+    color:#1d4ed8;background:rgba(255,255,255,.75);border:1px solid var(--border);border-radius:999px;
+    padding:8px 20px;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s}
+  .back:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(37,99,235,.22)}
+  .brand{font-weight:900;font-style:italic;letter-spacing:2px;color:#1d4ed8;font-size:15px;text-decoration:none}
+  .wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:58px 20px 60px}
+  .kicker{font-size:13px;font-style:italic;font-weight:900;color:#7cc4f5;letter-spacing:4px}
+  h1{font-size:clamp(28px,4vw,42px);font-weight:900;font-style:italic;letter-spacing:1px;line-height:1.35;margin:12px 0 12px;
+    background:linear-gradient(120deg,#123a75,#2563eb 60%,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .meta{font-size:13px;color:var(--muted);letter-spacing:1px;padding-bottom:22px;
+    border-bottom:1px solid var(--border);margin-bottom:34px}
+  .content h2{font-size:21px;font-weight:900;color:var(--text);margin:40px 0 14px;letter-spacing:1px;
+    padding-left:14px;border-left:4px solid var(--accent)}
+  .content p{font-size:16px;line-height:2.1;color:var(--body);margin:0 0 20px}
+  .content b{color:var(--accent)}
+  .content ul{margin:0 0 22px;padding-left:26px}
+  .content li{font-size:15.5px;line-height:2;color:var(--body);margin-bottom:10px}
+  .content li b{color:var(--accent)}
+  .callout{background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:16px;
+    padding:18px 22px;margin:0 0 22px;font-size:15px;line-height:2;color:var(--body)}
+  .pager{display:flex;justify-content:space-between;gap:14px;margin-top:64px;padding-top:28px;
+    border-top:1px solid var(--border);flex-wrap:wrap}
+  .pager a{flex:1;min-width:220px;text-decoration:none;background:rgba(255,255,255,.75);border:1px solid var(--border);
+    border-radius:16px;padding:16px 20px;box-shadow:var(--shadow);transition:transform .25s,box-shadow .25s}
+  .pager a:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(37,99,235,.2)}
+  .pager .dir{font-size:12px;color:var(--muted);letter-spacing:2px}
+  .pager .pt{font-weight:900;color:#1d4ed8;font-size:15px;margin-top:4px}
+  footer{position:relative;z-index:1;text-align:center;padding:26px 20px 42px;color:#6b87a8;font-size:13px}
+  footer b{font-style:italic;color:#1d4ed8}
+  @media (max-width:640px){.pager .next{display:none}.pager a{flex:none;width:100%}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="back" href="/">← 返回首页</a>
+  <a class="brand" href="/#tech">SKY DUEL · 技术专栏</a>
+</div>
+<div class="wrap">
+  <div class="kicker">UNDER THE HOOD · 03</div>
+  <h1>本地预判 + 权威回溯：高延迟也能指哪打哪</h1>
+  <div class="meta">《苍穹对决》技术专栏 · 网络同步篇 · 约 2000 字 · 阅读 6 分钟</div>
+  <div class="content">
+    <p>前两篇解决了"连得上"和"谁说了算"，还剩最后一关，也是最影响体验的一关：<b>等</b>。如果每一次开火都要等子弹"飞"到房主、结算完再飞回来显示结果，半秒的延迟足够把空战手感毁得干干净净——你明明瞄得很准，画面却像在水下开枪。《苍穹对决》采用与 CS、守望先锋同一思想的方案：<b>本地预判 + 权威回溯</b>——先给结果，再对账，错了就悄悄改回来。</p>
+
+    <h2>一、问题：半秒延迟毁掉所有手感</h2>
+    <p>设想最"守规矩"的做法：扣扳机 → 上报房主 → 房主判定命中 → 快照回传 → 本地显示命中特效。这条链路要跑完一个完整的网络往返（RTT）。50ms 的 RTT 也许还行；可一旦对方在另一个城市，100~300ms 的延迟下，从开火到看见命中要等四分之一个秒——空战里足够让敌机飞出半个屏幕。<b>核心矛盾在于：正确性要求等权威，手感要求零等待。</b>两者表面不可兼得，破局思路是——不等，先给。</p>
+
+    <h2>二、预判：先给爽快感</h2>
+    <p>实时性最强的伤害与碰撞，你的浏览器<b>本地先行结算</b>：子弹命中瞬间立刻扣血、立刻出命中特效、立刻播打击音效，零等待。与此同时，这次命中会上报房主待裁定。也就是说，你看到的血条变化其实是"预判值"——本地基于自己看到的世界做出的最合理猜测。</p>
+    <p>猜就要记账。《苍穹对决》为每个实体维护两个数：<b>predTotal</b>（尚未被权威确认的预判伤害量）和 <b>lastAuth</b>（最近一次权威快照里的血量）。预判与权威两条账本分开记，随时可以合并、随时可以拆开重算。这是整套机制能"错了改回来"而不出乱子的关键。</p>
+    <p>为什么不直接改血条、记一个"预计血量"了事？因为一次预判的"有效期"横跨好几个快照周期：你连开三炮，第一发的裁决还没回来，第二发、第三发的预判已经叠上去了。如果只有一锅粥式的总血量，任何一次回溯都会把"还没裁决的伤害"一并冲掉；分成两本账后，回溯只动 predTotal 里对应的那一笔，权威部分岿然不动。<b>能不能优雅地撤销，取决于一开始有没有把账记对。</b></p>
+
+    <h2>三、对账：权威说了算</h2>
+    <p>房主的 sync 快照到达时，本地并不粗暴覆盖血条，而是做一次合并：<b>显示血量 = 权威血量 − 未确认预判量</b>。你打中的那几发如果房主也判定命中，预判量会随快照逐步"转正"，血条纹丝不动——你完全感觉不到对账的发生。</p>
+    <p>如果房主裁定你其实没打中（子弹提前坠海、被掩体挡住、目标恰好规避），会立即下发 <b>dmgReject</b> 回溯消息，本地把预判扣掉的血如数补回。整个过程在一次网络往返内完成，玩家的感受只是"这次好像没打实了"——而这本来就是事实。</p>
+    <p>一个自然的担心是：血条加回去，会不会看起来很假？实践中几乎不会。原因是<b>回溯的窗口极短</b>（通常一两百毫秒）且幅度很小（一两发机炮的伤害），而玩家的注意力正集中在缠斗本身——这个量级的视觉修正会被大脑自然归类为"目标擦过去了"。真正让人出戏的从来不是小幅修正，而是长时间的对不上账：血条明明掉了却不死，或者命中特效出来了却没伤害。预判 + 回溯恰恰消灭的是后者。</p>
+
+    <h2>四、被打的一方：快照直接覆盖</h2>
+    <p>打人是预判，挨打却是另一套逻辑。你被打掉血时，本地不做任何"预判抵抗"——<b>你的血条由房主快照直接覆盖</b>。原因很实际：挨打方自己根本不知道对方是否真的命中（子弹从背后飞来，你无从判定），做预测只会制造矛盾。权威快照说你剩多少血，你就剩多少血，方向、伤害全部以快照为准，无需任何回滚消息。</p>
+
+    <h2>五、哪些事情坚决不预判？</h2>
+    <p><b>死亡</b>。击杀是比赛最敏感的裁定：本地预测死亡极易出现"我明明打死了他，他却还在飞"的争议画面——两边各执一词，谁都不服。所以死亡一律等房主权威宣判，本地只负责演出。唯一的例外是<b>撞海、撞地这类确定性环境坠毁</b>：物理规律在本地同样可算，预判结果绝不会与权威矛盾，做了也不撕账。</p>
+    <p>这条边界线背后是一个普适原则：<b>预判的前提是"可复现"</b>。确定性物理（撞地、撞海）在两台设备上算出同一个结果，预判就永远安全；涉及对手意图与权威裁定的结果（被击落），本地没有任何信息优势，预判就是赌博。划分"哪些可以猜、哪些必须等"，比预判算法本身更考验设计功力。</p>
+
+    <h2>六、延迟补偿：专治"幽灵弹"</h2>
+    <p>预判解决了"我的操作反馈慢"，还有个对称问题："别人的状态到我这里也是旧的"。高延迟玩家上报的状态可能严重过期——他开枪时瞄的是几百毫秒前的残影。如果房主照单全收，就会出现"对着早已飞走的影子却被判命中"的幽灵弹。《苍穹对决》的对策是在房主侧做<b>新鲜度检查</b>：</p>
+    <ul>
+      <li>飞机状态过期超过 <b>350ms</b> 的开火，跳过命中判定；</li>
+      <li>防空车状态过期超过 <b>400ms</b> 的开火，同样跳过。</li>
+    </ul>
+    <p>配合 <b>firePred 对账表</b>——每条本地预判开火记录在表，收到房主裁决后销账，5 秒未裁决自动过期清理——预判与权威的账永远对得清清楚楚，不会越滚越多。</p>
+    <p>细心的人会问：为什么飞机 350ms、防空车 400ms，阈值不一样？因为防空车是固定地面单位，它的"状态过期"只影响炮塔指向，不影响位置判定——晚一点的状态依然大体可信；而飞机高速机动，350ms 足以飞出好几个机身位，过期状态的"可信半径"小得多。<b>阈值的宽严，本质上是在为不同目标的机动性定价。</b></p>
+
+    <h2>结语：手感的本质</h2>
+    <p>这套组合拳的效果可以总结成一句话：<b>操作反馈永远零延迟，权威结果永远正确，两者的短暂不一致会在几百毫秒内静默修复。</b>玩家不需要理解 predTotal、dmgReject 这些名词——他只需要觉得，这游戏跟单机一样跟手。而这正是"市售网游级网络同步"的全部含义：不是没有延迟，而是让延迟隐形。</p>
+    <div class="callout">三篇连读，就是《苍穹对决》联机的完整拼图：WebRTC 直连给出管道，房主小世界给出裁判，预判与回溯给出手感。全部逻辑运行在你的浏览器里——这就是无服务器联机的完全体。</div>
+  </div>
+  <div class="pager">
+    <a href="/articles/host-world/" class="prev"><div class="dir">← 上一篇</div><div class="pt">房主小世界：你的浏览器就是服务器</div></a>
+    <a href="/" class="next"><div class="dir">返回 →</div><div class="pt">苍穹对决 · 首页</div></a>
+  </div>
+</div>
+<footer><b>SKY DUEL</b> · 苍穹对决 — 纯前端 3D 空战网页游戏 · 技术专栏</footer>
+</body>
+</html>

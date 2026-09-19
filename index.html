@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>苍穹对决 Sky Duel - 免费3D联机空战网页游戏 | 飞机大战 · WebRTC 双人对决</title>
+<meta name="description" content="苍穹对决（Sky Duel）是一款免费免下载的 3D 飞机大战网页游戏：机炮狗斗、弱点打击、爆炸特效、海岛/现代都市/军事基地三地图，支持邀请码 WebRTC 联机（1v1/3v3/5v5），适配电脑与手机触屏，打开浏览器即玩。">
+<meta name="keywords" content="3D飞机大战,空战游戏,网页游戏,联机游戏,双人联机,WebRTC游戏,飞行射击,免费网页游戏,手机空战游戏,苍穹对决,Sky Duel,飞机游戏在线玩">
+<meta name="author" content="Sky Duel">
+<meta name="theme-color" content="#e9f2fd">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="苍穹对决 Sky Duel · 免费 3D 联机空战网页游戏">
+<meta property="og:description" content="机炮狗斗 · 弱点打击 · 三地图 · 邀请码联机 · 电脑手机都能玩，无需下载，打开浏览器即战。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:url" content="https://game.4365754.xyz/">
+<meta property="og:image" content="https://game.4365754.xyz/favicon.svg">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://game.4365754.xyz/">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="apple-touch-icon" href="./favicon.svg">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "WebSite", "@id": "https://game.4365754.xyz/#website", "url": "https://game.4365754.xyz/",
+      "name": "苍穹对决 Sky Duel", "alternateName": "Sky Duel", "description": "免费免下载的 3D 联机空战网页游戏",
+      "inLanguage": "zh-CN", "publisher": { "@id": "https://game.4365754.xyz/#org" } },
+    { "@type": "Organization", "@id": "https://game.4365754.xyz/#org", "name": "Sky Duel",
+      "url": "https://game.4365754.xyz/", "logo": { "@type": "ImageObject", "url": "https://game.4365754.xyz/favicon.svg" } },
+    { "@type": "VideoGame", "name": "苍穹对决", "alternateName": ["Sky Duel", "苍穹对决 Sky Duel"],
+      "url": "https://game.4365754.xyz/play/", "mainEntityOfPage": "https://game.4365754.xyz/",
+      "description": "免费免下载的 3D 飞机大战网页游戏：机炮狗斗、弱点打击、爆炸特效，创新式无服务器 WebRTC 联机（1v1/3v3/5v5），海岛/现代都市/军事基地三地图，电脑手机都能玩。",
+      "genre": ["射击", "空战", "动作"], "gamePlatform": "Web Browser", "applicationCategory": "Game",
+      "operatingSystem": "Any", "inLanguage": "zh-CN",
+      "author": { "@id": "https://game.4365754.xyz/#org" }, "publisher": { "@id": "https://game.4365754.xyz/#org" },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY", "availability": "https://schema.org/InStock", "url": "https://game.4365754.xyz/play/" },
+      "playMode": ["SinglePlayer", "MultiPlayer"], "gameItem": ["机炮空战", "防空车突袭"] },
+    { "@type": "ItemList", "name": "苍穹对决技术专栏：联机原理",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "零服务器联机：不花一分钱，怎么让十个人同屏狗斗？", "url": "https://game.4365754.xyz/articles/p2p/" },
+        { "@type": "ListItem", "position": 2, "name": "房主小世界：你的浏览器就是服务器", "url": "https://game.4365754.xyz/articles/host-world/" },
+        { "@type": "ListItem", "position": 3, "name": "本地预判 + 权威回溯：高延迟也能指哪打哪", "url": "https://game.4365754.xyz/articles/prediction/" } ] }
+  ]
+}
+</script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--ink:#123a75;--text:#1e293b;--body:#2e4c6e;--muted:#5b7ba0;--accent:#2563eb;
+    --glass-bd:rgba(255,255,255,.62);--shadow:0 18px 46px rgba(31,58,120,.14)}
+  html{scroll-behavior:smooth}
+  body{min-height:100vh;overflow-x:hidden;color:var(--text);touch-action:pan-y;
+    font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;-webkit-font-smoothing:antialiased;
+    background:linear-gradient(180deg,#dceeff 0%,#eaeafb 38%,#fdf0e2 72%,#e8f4ff 100%)}
+
+  /* ===== 统一背景：多彩雾化光斑 + 粒子（内容为浮在其上的玻璃板块） ===== */
+  #bgFx{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .blob{position:absolute;border-radius:50%;filter:blur(95px);opacity:.42;will-change:transform}
+  .blob.b1{width:44vw;height:44vw;left:-10vw;top:-12vw;background:#ffd9a3;animation:blobA 30s ease-in-out infinite alternate}
+  .blob.b2{width:38vw;height:38vw;right:-8vw;top:-4vw;background:#c9b8ff;animation:blobB 34s ease-in-out infinite alternate}
+  .blob.b3{width:42vw;height:42vw;right:-12vw;bottom:-14vw;background:#8ed3ff;animation:blobA 32s ease-in-out infinite alternate-reverse}
+  .blob.b4{width:34vw;height:34vw;left:-6vw;bottom:-8vw;background:#b6f3e2;animation:blobB 28s ease-in-out infinite alternate-reverse}
+  @keyframes blobA{from{transform:translate(0,0) scale(1)}to{transform:translate(8vw,6vh) scale(1.14)}}
+  @keyframes blobB{from{transform:translate(0,0) scale(1.1)}to{transform:translate(-7vw,6vh) scale(.93)}}
+  #pcv{position:absolute;inset:0;width:100%;height:100%}
+  #page{position:relative;z-index:1}
+
+  /* ===== 液态玻璃 ===== */
+  .glass{position:relative;background:linear-gradient(135deg,rgba(255,255,255,.6),rgba(255,255,255,.26));
+    -webkit-backdrop-filter:blur(20px) saturate(1.8);backdrop-filter:blur(20px) saturate(1.8);
+    border:1px solid var(--glass-bd);border-radius:24px;box-shadow:var(--shadow),
+    inset 0 1.5px 0 rgba(255,255,255,.88),inset 0 -1.5px 1px rgba(255,255,255,.2)}
+  .glass::before{content:"";position:absolute;top:0;left:10%;right:10%;height:44%;border-radius:inherit;
+    background:linear-gradient(180deg,rgba(255,255,255,.4),transparent);pointer-events:none}
+  .liftable{transition:transform .3s cubic-bezier(.2,.7,.3,1.1),box-shadow .3s}
+  .liftable:hover{transform:translateY(-6px);box-shadow:0 26px 60px rgba(31,58,120,.2),inset 0 1.5px 0 rgba(255,255,255,.88)}
+
+  /* ===== HERO ===== */
+  .hero{position:relative;min-height:100svh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .heroScene{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .heroBox{position:relative;z-index:3;text-align:center;padding:0 20px;max-width:920px}
+  .heroCn{display:inline-flex;align-items:center;gap:12px;font-size:14px;font-weight:900;letter-spacing:9px;
+    text-indent:9px;color:#24549c}
+  .heroCn::before,.heroCn::after{content:"";width:46px;height:1.5px;background:linear-gradient(90deg,transparent,rgba(36,84,156,.5))}
+  .heroCn::after{background:linear-gradient(90deg,rgba(36,84,156,.5),transparent)}
+  .heroTitle{margin:12px 0 2px;font-weight:900;font-style:italic;letter-spacing:2px;line-height:1;
+    font-size:clamp(44px,7vw,92px);min-height:1em;white-space:nowrap;transform:skewX(-6deg);transform-origin:center;
+    filter:drop-shadow(0 10px 28px rgba(29,78,216,.32))}
+  .heroTitle .ch{display:inline-block;opacity:0;transform:translateY(14px) rotate(5deg);
+    background:linear-gradient(180deg,#f4faff 10%,#8fd0f7 46%,#1d4ed8 94%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:chIn .32s cubic-bezier(.2,.9,.3,1.4) forwards}
+  @keyframes chIn{to{opacity:1;transform:none}}
+  .caret{display:inline-block;width:.085em;height:.78em;margin-left:.05em;vertical-align:-.05em;
+    background:#1d4ed8;border-radius:2px;animation:caretBlink .85s steps(1) infinite}
+  @keyframes caretBlink{50%{opacity:0}}
+  .heroSub{margin-top:14px;font-size:14px;letter-spacing:2.5px;color:#3d5f8c}
+  .heroBtns{margin-top:32px}
+  a.startBtn{position:relative;overflow:hidden;display:inline-flex;align-items:center;cursor:pointer;text-decoration:none;
+    font-size:17px;font-weight:bold;letter-spacing:6px;text-indent:6px;color:#0f2f6b;padding:15px 50px;border-radius:999px;
+    background:linear-gradient(135deg,rgba(255,255,255,.8),rgba(255,255,255,.36));
+    -webkit-backdrop-filter:blur(18px) saturate(1.9);backdrop-filter:blur(18px) saturate(1.9);
+    border:1.5px solid rgba(255,255,255,.92);
+    box-shadow:0 16px 40px rgba(37,99,235,.3),inset 0 1.5px 0 rgba(255,255,255,.95),inset 0 -5px 12px rgba(56,189,248,.2);
+    transition:transform .25s,box-shadow .25s}
+  a.startBtn:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 24px 54px rgba(37,99,235,.4),inset 0 1.5px 0 rgba(255,255,255,.95)}
+  a.startBtn::after{content:"";position:absolute;top:0;left:-80%;width:52%;height:100%;
+    background:linear-gradient(105deg,transparent,rgba(255,255,255,.75),transparent);animation:btnSweep 3.4s ease-in-out infinite}
+  @keyframes btnSweep{0%{left:-80%}55%,100%{left:135%}}
+
+  /* hero 场景动效 */
+  .cloud{animation:cloudDrift linear infinite}
+  .cloud.c1{animation-duration:64s}.cloud.c2{animation-duration:88s;animation-delay:-30s}
+  .cloud.c3{animation-duration:110s;animation-delay:-60s}
+  @keyframes cloudDrift{from{transform:translateX(-260px)}to{transform:translateX(260px)}}
+  .sunGlow{transform-origin:center;animation:sunBreath 5s ease-in-out infinite}
+  @keyframes sunBreath{0%,100%{opacity:.85;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+  .trail{stroke-dasharray:10 14;animation:trailFlow 1.6s linear infinite}
+  @keyframes trailFlow{to{stroke-dashoffset:-48}}
+  .jetG{animation:jetFloat 4.2s ease-in-out infinite}
+  .jetG.j2{animation-delay:-1.4s}.jetG.j3{animation-delay:-2.6s}
+  @keyframes jetFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  .gunTrk{stroke-dasharray:4 10;animation:trkFlow 1.2s linear infinite}
+  @keyframes trkFlow{to{stroke-dashoffset:-28}}
+  .radarG{transform-origin:1040px 118px;animation:radarSpin 4.5s linear infinite}
+  @keyframes radarSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+  /* ===== 首屏下沿数据条 ===== */
+  .quickbar{width:min(880px,92%);margin:-42px auto 0;position:relative;z-index:4;
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:15px 18px}
+  .qb{display:flex;align-items:baseline;justify-content:center;gap:8px}
+  .qb b{font-size:clamp(19px,2.5vw,28px);font-style:italic;font-weight:900;
+    background:linear-gradient(180deg,#38bdf8,#1d4ed8);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .qb span{font-size:12px;color:var(--muted);letter-spacing:2px}
+
+  /* ===== 通用分区 ===== */
+  .lsec{position:relative;width:min(1160px,94%);margin:0 auto;padding:92px 0 24px}
+  .lsecHead{margin-bottom:34px;text-align:center}
+  .lsecNo{font-size:12px;font-weight:900;color:#5aa3e8;letter-spacing:5px;text-indent:5px}
+  .lsecTitle{font-size:clamp(26px,3.4vw,40px);font-weight:900;font-style:italic;letter-spacing:2px;margin-top:6px;
+    background:linear-gradient(120deg,#123a75,#2563eb 60%,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lsecDesc{margin-top:10px;color:var(--muted);font-size:14px;letter-spacing:1px}
+  .reveal{opacity:0;transform:translateY(38px);transition:opacity .7s cubic-bezier(.2,.7,.3,1),transform .7s cubic-bezier(.2,.7,.3,1)}
+  .reveal.in{opacity:1;transform:none}
+  .reveal.d1{transition-delay:.08s}.reveal.d2{transition-delay:.16s}.reveal.d3{transition-delay:.24s}
+
+  /* ===== 巨幅展示（飞机 / 防空车） ===== */
+  .showVisual{position:relative;display:flex;justify-content:center;padding:6px 0 0}
+  .showVisual svg{display:block;width:min(92%,1000px);height:auto;overflow:visible}
+  .bigJet{filter:drop-shadow(0 24px 38px rgba(29,78,216,.3))}
+  .bigGun{filter:drop-shadow(0 24px 38px rgba(30,58,95,.28))}
+  .jetFly{animation:jetFly 9s ease-in-out infinite}
+  @keyframes jetFly{0%,100%{transform:translate(0,0) rotate(-3deg)}50%{transform:translate(24px,-14px) rotate(-1.5deg)}}
+  .burn{animation:burnFlick .28s ease-in-out infinite alternate;transform-origin:322px 158px}
+  @keyframes burnFlick{from{opacity:.55;transform:scaleX(.92)}to{opacity:.95;transform:scaleX(1.1)}}
+  .turretG{transform-origin:588px 250px;animation:turretSweep 7.5s ease-in-out infinite alternate}
+  @keyframes turretSweep{from{transform:rotate(-9deg)}to{transform:rotate(7deg)}}
+  .muzzle{stroke-dasharray:3 14;animation:trkFlow .5s linear infinite}
+
+  /* 特性网格 */
+  .featGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
+  .featCard{padding:22px 22px 20px}
+  .featCard h3{font-size:16px;font-weight:900;letter-spacing:1px;color:#173d77;display:flex;align-items:center;gap:8px}
+  .featCard h3 i{width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#2563eb);
+    box-shadow:0 0 0 3px rgba(56,189,248,.16);flex:none}
+  .featCard p{font-size:13.5px;line-height:1.95;color:var(--body);margin-top:10px}
+  .featCard b{color:var(--accent)}
+
+  /* ===== 地图大展示（内联详解） ===== */
+  .mapShow{margin-top:34px;padding:16px}
+  .mapPanorama{display:block;width:100%;border-radius:18px}
+  .mapTitle{display:flex;align-items:baseline;gap:12px;margin:24px 0 0}
+  .mapTitle b{font-size:19px;font-weight:900;letter-spacing:2px;color:#123a75}
+  .mapTitle em{font-style:normal;font-size:12px;color:var(--muted);letter-spacing:2px}
+  .mapFacts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
+  .fact{padding:16px 18px;background:rgba(255,255,255,.34);border:1px solid rgba(255,255,255,.6);border-radius:16px}
+  .fact h4{font-size:14px;font-weight:900;letter-spacing:1px;color:#173d77;margin-bottom:7px}
+  .fact p{font-size:12.5px;line-height:1.9;color:var(--body)}
+  .fact b{color:var(--accent)}
+
+  /* ===== 操控指南 ===== */
+  .ctrlGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:30px}
+  .ctrlCard{padding:22px 24px}
+  .ctrlCard h3{font-size:16px;font-weight:900;letter-spacing:1px;color:#173d77;margin-bottom:12px}
+  .ctrlRow{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed rgba(37,99,235,.14);
+    font-size:13px;color:var(--body)}
+  .ctrlRow:last-child{border-bottom:0}
+  .ctrlRow span:first-child{color:var(--muted);flex:none;min-width:112px}
+  kbd{display:inline-block;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.2);border-radius:5px;
+    padding:1px 7px;font-family:inherit;font-size:12px;color:var(--ink)}
+
+  /* ===== 联机（浅色玻璃，与全站统一背景衔接） ===== */
+  .netGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:30px}
+  .netCard{padding:24px}
+  .netCard h3{font-size:16.5px;font-weight:900;letter-spacing:1px;color:#123a75;margin-bottom:3px}
+  .netCard .ncSub{font-size:11.5px;letter-spacing:2px;color:var(--muted)}
+  .netCard p{font-size:13.5px;line-height:1.95;color:var(--body);margin-top:11px}
+  .netCard svg{display:block;width:100%;height:168px;margin-top:12px}
+  .netCard.old svg .nline{stroke:#9aa8bd}
+  .netCard.new svg .nline{stroke:#2563eb;stroke-dasharray:7 9;animation:netFlow 1.1s linear infinite}
+  .netCard.new svg .nnode{animation:nodeGlow 2.4s ease-in-out infinite}
+  @keyframes netFlow{to{stroke-dashoffset:-32}}
+  @keyframes nodeGlow{0%,100%{filter:drop-shadow(0 0 2px rgba(37,99,235,.35))}50%{filter:drop-shadow(0 0 9px rgba(56,189,248,.9))}}
+  .stepRow{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+  .stepCard{padding:18px 20px}
+  .stepCard .sn{font-size:12px;font-weight:900;font-style:italic;color:#38bdf8;letter-spacing:2px}
+  .stepCard h4{font-size:15px;font-weight:900;letter-spacing:1px;color:#123a75;margin:5px 0 7px}
+  .stepCard p{font-size:12.5px;line-height:1.9;color:var(--body)}
+  .netBadges{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+  .netBadge{display:flex;align-items:center;gap:8px;color:#173d77;font-size:13px;letter-spacing:1px;
+    border:1px solid rgba(37,99,235,.18);background:rgba(37,99,235,.06);border-radius:999px;padding:9px 18px}
+  .netBadge b{color:var(--accent);font-style:italic}
+
+  /* ===== 技术专栏 ===== */
+  .artRow{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  a.artCard{display:block;text-decoration:none;color:inherit}
+  .artCard .mcBody{padding:20px 20px 18px;position:relative;z-index:1}
+  .artNo{font-size:12px;font-weight:900;color:#5aa3e8;letter-spacing:3px}
+  .artCard .mcName{display:flex;align-items:center;justify-content:space-between;font-weight:900;font-size:16.5px;
+    letter-spacing:1px;margin-top:5px;color:#123a75}
+  .artTag{font-size:11px;font-weight:normal;color:var(--accent);background:rgba(37,99,235,.08);
+    border:1px solid rgba(37,99,235,.2);border-radius:999px;padding:3px 10px;letter-spacing:1px}
+  .artCard .mcDesc{font-size:12.5px;color:var(--muted);line-height:1.85;margin-top:7px}
+  .artRead{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:13px;font-weight:bold;
+    letter-spacing:2px;color:var(--accent);transition:transform .25s}
+  a.artCard:hover .artRead{transform:translateX(5px)}
+
+  /* ===== 数字条 + 页脚 ===== */
+  .statBand{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;width:min(1160px,94%);margin:86px auto 0}
+  .statCell{text-align:center;padding:26px 10px}
+  .statCell b{display:block;font-size:clamp(28px,3.8vw,44px);font-style:italic;font-weight:900;position:relative;z-index:1;
+    background:linear-gradient(180deg,#38bdf8,#1d4ed8);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .statCell span{font-size:12.5px;color:var(--muted);letter-spacing:3px}
+  .lfoot{width:min(1160px,94%);margin:64px auto 0;padding:30px 0 44px;border-top:1px solid rgba(37,99,235,.16);
+    display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;color:#6b87a8;font-size:13px}
+  .lfoot b{font-style:italic;color:#1d4ed8;letter-spacing:2px}
+
+  body.leaving #page{pointer-events:none;animation:landOut .8s cubic-bezier(.5,0,.8,.4) forwards}
+  @keyframes landOut{0%{opacity:1;filter:blur(0)}45%{opacity:1}100%{opacity:0;filter:blur(14px);transform:scale(1.06)}}
+
+  @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+  @media (max-width:860px){
+    .quickbar{grid-template-columns:repeat(2,1fr)}
+    .featGrid,.mapFacts,.stepRow{grid-template-columns:repeat(2,1fr)}
+    .ctrlGrid,.netGrid,.artRow{grid-template-columns:1fr}
+    .statBand{grid-template-columns:repeat(2,1fr)}
+    .showVisual svg{width:100%}
+    .lsec{padding-top:74px}}
+  @media (max-width:520px){.featGrid,.mapFacts,.stepRow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="bgFx" aria-hidden="true">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div>
+  <canvas id="pcv"></canvas>
+</div>
+
+<div id="page">
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <svg class="heroScene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="hsSky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#5ea7ee"/><stop offset=".34" stop-color="#9ccdf5"/>
+        <stop offset=".62" stop-color="#d3e9fb"/><stop offset=".86" stop-color="#ffe6cf"/></linearGradient>
+      <linearGradient id="hsSea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#5fb0e0"/><stop offset="1" stop-color="#1e5f9e"/></linearGradient>
+      <radialGradient id="hsSun" cx=".5" cy=".5" r=".5">
+        <stop offset="0" stop-color="#fff7dd"/><stop offset=".4" stop-color="#ffe3ae"/>
+        <stop offset="1" stop-color="#ffe3ae" stop-opacity="0"/></radialGradient>
+      <linearGradient id="hsJet" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#0f2f6b"/><stop offset="1" stop-color="#2a6cf0"/></linearGradient>
+    </defs>
+    <rect width="1600" height="900" fill="url(#hsSky)"/>
+    <circle class="sunGlow" cx="1190" cy="580" r="290" fill="url(#hsSun)"/>
+    <circle cx="1190" cy="580" r="74" fill="#fff8e3"/>
+    <polygon class="sunGlow" points="1190,580 640,900 1010,900" fill="#ffe9bd" opacity=".5"/>
+    <polygon class="sunGlow" points="1190,580 1070,900 1330,900" fill="#ffe9bd" opacity=".4" style="animation-delay:-2.5s"/>
+    <g class="cloud c1" fill="#ffffff" opacity=".9"><ellipse cx="320" cy="170" rx="160" ry="34"/><ellipse cx="420" cy="146" rx="104" ry="26"/></g>
+    <g class="cloud c2" fill="#ffffff" opacity=".72"><ellipse cx="880" cy="286" rx="190" ry="36"/><ellipse cx="990" cy="266" rx="110" ry="26"/></g>
+    <g class="cloud c3" fill="#ffffff" opacity=".82"><ellipse cx="1360" cy="180" rx="170" ry="30"/><ellipse cx="1460" cy="162" rx="90" ry="22"/></g>
+    <g class="cloud c1" fill="#ffffff" opacity=".5"><ellipse cx="620" cy="470" rx="220" ry="28"/><ellipse cx="760" cy="452" rx="120" ry="20"/></g>
+    <g stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" opacity=".75" fill="none">
+      <path class="trail" d="M60 330 H 320"/><path class="trail" d="M0 424 H 250" style="animation-delay:-.6s"/>
+      <path class="trail" d="M170 246 H 355" style="animation-delay:-1.1s"/></g>
+    <g class="jetG" transform="translate(330,300) scale(2.8) rotate(-8)">
+      <path d="M32 9 C34 16 35 21 36 26 L53 39 L53 44 L36 37 L36 46 L43 51 L43 55 L32 51.5 L21 55 L21 51 L28 46 L28 37 L11 44 L11 39 L28 26 C29 21 30 16 32 9 Z" fill="url(#hsJet)" stroke="#cfe8ff" stroke-width="1.2"/></g>
+    <g class="jetG j2" transform="translate(250,396) scale(1.8) rotate(-8)">
+      <path d="M32 9 C34 16 35 21 36 26 L53 39 L53 44 L36 37 L36 46 L43 51 L43 55 L32 51.5 L21 55 L21 51 L28 46 L28 37 L11 44 L11 39 L28 26 C29 21 30 16 32 9 Z" fill="url(#hsJet)" stroke="#cfe8ff" stroke-width="1.2"/></g>
+    <g class="jetG j3" transform="translate(372,212) scale(1.8) rotate(-8)">
+      <path d="M32 9 C34 16 35 21 36 26 L53 39 L53 44 L36 37 L36 46 L43 51 L43 55 L32 51.5 L21 55 L21 51 L28 46 L28 37 L11 44 L11 39 L28 26 C29 21 30 16 32 9 Z" fill="url(#hsJet)" stroke="#cfe8ff" stroke-width="1.2"/></g>
+    <rect y="780" width="1600" height="120" fill="url(#hsSea)"/>
+    <g stroke="#bfe3ff" opacity=".35" stroke-linecap="round" stroke-width="3">
+      <path d="M150 816 h120"/><path d="M470 842 h150"/><path d="M820 812 h90"/><path d="M1180 846 h130"/></g>
+    <g fill="#2c5081" opacity=".94">
+      <rect x="56" y="640" width="56" height="140"/><rect x="79" y="598" width="10" height="42"/>
+      <rect x="132" y="682" width="46" height="98"/><rect x="192" y="616" width="62" height="164"/>
+      <rect x="218" y="580" width="10" height="36"/><rect x="268" y="702" width="42" height="78"/>
+      <rect x="322" y="652" width="54" height="128"/><rect x="344" y="622" width="9" height="30"/></g>
+    <g fill="#9fd0f2" opacity=".55">
+      <rect x="66" y="664" width="8" height="5"/><rect x="84" y="664" width="8" height="5"/>
+      <rect x="202" y="640" width="9" height="5"/><rect x="222" y="658" width="9" height="5"/>
+      <rect x="332" y="676" width="9" height="5"/><rect x="352" y="694" width="9" height="5"/></g>
+    <ellipse cx="1285" cy="784" rx="240" ry="24" fill="#164a6e" opacity=".8"/>
+    <path d="M1060 780 L1160 650 L1230 722 L1310 636 L1408 780 Z" fill="#3e5c49"/>
+    <path d="M1310 636 L1352 700 L1470 780 L1408 780 Z" fill="#345041"/>
+    <path d="M1160 650 L1180 678 L1130 780 L1060 780 Z" fill="#4a6b53"/>
+    <g fill="#16281f"><rect x="1298" y="618" width="26" height="18" rx="4"/>
+      <g transform="rotate(-30 1311 618)"><rect x="1300" y="606" width="5" height="30" rx="2"/><rect x="1312" y="606" width="5" height="30" rx="2"/></g></g>
+    <path class="gunTrk" d="M1296 612 L1170 560" stroke="#ffe9a8" stroke-width="2.4" fill="none" opacity=".7"/>
+    <path class="gunTrk" d="M1306 608 L1210 536" stroke="#ffe9a8" stroke-width="2.4" fill="none" opacity=".55" style="animation-delay:-.3s"/>
+    <g stroke="#28527f" stroke-width="3" fill="none" stroke-linecap="round" opacity=".55">
+      <path d="M470 232 q10 -9 20 0 q10 -9 20 0"/><path d="M560 262 q8 -7 16 0 q8 -7 16 0"/></g>
+  </svg>
+  <div class="heroBox" id="heroCopy">
+    <div class="heroCn">苍 穹 对 决</div>
+    <h1 class="heroTitle" id="heroTitle" aria-label="SKY DUEL"><span class="caret"></span></h1>
+    <div class="heroSub">免费 3D 网页空战 · 无需下载 · 浏览器即战</div>
+    <div class="heroBtns"><a class="startBtn" id="btnStartGame" href="/play/">开始游戏</a></div>
+  </div>
+</section>
+
+<div class="quickbar glass">
+  <div class="qb"><b>3</b><span>作战地图</span></div>
+  <div class="qb"><b>2</b><span>玩法模式</span></div>
+  <div class="qb"><b>5v5</b><span>最大团战</span></div>
+  <div class="qb"><b>100%</b><span>免费无广告</span></div>
+</div>
+
+<!-- ============ 01 空战对决 ============ -->
+<section class="lsec">
+  <div class="lsecHead reveal"><div class="lsecNo">— 01 · DOGFIGHT</div>
+    <h2 class="lsecTitle">空战对决</h2>
+    <div class="lsecDesc">视角领先操控 · 机炮狗斗 · 五局三胜</div></div>
+  <div class="showVisual reveal d1">
+    <svg class="bigJet" data-px="52" viewBox="0 0 900 320" role="img" aria-label="战斗机">
+      <defs>
+        <linearGradient id="gjBody" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#0f2f6b"/><stop offset=".55" stop-color="#2563eb"/><stop offset="1" stop-color="#60a5fa"/></linearGradient>
+        <linearGradient id="gjWing" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#1d4ed8"/><stop offset="1" stop-color="#7cbdf7"/></linearGradient>
+      </defs>
+      <g stroke="#9cd0ff" stroke-width="8" stroke-linecap="round" opacity=".45">
+        <path class="trail" d="M30 150 H 300"/><path class="trail" d="M10 200 H 240" style="animation-delay:-.5s"/>
+        <path class="trail" d="M50 108 H 260" style="animation-delay:-1s"/></g>
+      <g class="burn"><path d="M318 138 L232 120 L318 158 Z" fill="#7dd3fc" opacity=".85"/>
+        <path d="M318 176 L252 196 L318 196 Z" fill="#a5e4ff" opacity=".6"/></g>
+      <g class="jetFly"><g transform="translate(320,60) scale(6.4)">
+        <path d="M32 9 C34 16 35 21 36 26 L53 39 L53 44 L36 37 L36 46 L43 51 L43 55 L32 51.5 L21 55 L21 51 L28 46 L28 37 L11 44 L11 39 L28 26 C29 21 30 16 32 9 Z" fill="url(#gjBody)" stroke="#dbeefe" stroke-width="1.1"/>
+        <path d="M32 9 C33.4 15 34.4 20 35 25 L29 25 C29.6 20 30.6 15 32 9 Z" fill="url(#gjWing)" opacity=".9"/>
+        <ellipse cx="32" cy="21" rx="4.2" ry="7.5" fill="#bfe3ff" opacity=".8"/>
+        <path d="M36 27 L51 38.6 L51 41.8 L36 35.6 Z" fill="url(#gjWing)" opacity=".95"/>
+        <path d="M28 27 L13 38.6 L13 41.8 L28 35.6 Z" fill="url(#gjWing)" opacity=".8"/>
+        <circle cx="32" cy="42" r="1.6" fill="#ffe08a"/></g></g>
+    </svg>
+  </div>
+  <div class="featGrid">
+    <div class="featCard glass liftable reveal"><h3><i></i>视角领先操控</h3>
+      <p>鼠标 / 触屏滑动控制视角，飞机以<b>最大转向速率追赶视角</b>。小准星是视角方向，大准星是机头朝向，两圈重合即完全跟随——既有手感上限，又不会变成不真实的 1:1 甩尾。</p></div>
+    <div class="featCard glass liftable reveal d1"><h3><i></i>弱点打击系统</h3>
+      <p>驾驶舱命中 <b>3 倍伤害</b>，机身其余部位 1 倍。一刀一枪的位置感直接决定胜负，缠斗里抢的是角度而不是手速。</p></div>
+    <div class="featCard glass liftable reveal d2"><h3><i></i>爆炸与震屏</h3>
+      <p>击落瞬间<b>爆炸粒子 + 冲击波 + 屏幕震动</b>三连反馈，配合 Web Audio 实时合成的音效，坠毁的重量感拉满。</p></div>
+    <div class="featCard glass liftable reveal"><h3><i></i>五局三胜</h3>
+      <p>每局一命，先拿 3 分者胜。撞击、出界、超高都会判负，回合之间自动重置血量与位置，节奏干净利落。</p></div>
+    <div class="featCard glass liftable reveal d1"><h3><i></i>敌我识别</h3>
+      <p>我方蓝色标记、敌方红色标记，屏幕内外<b>菱形指示器全程追踪</b>并显示距离。3v3/5v5 还会在机体上方叠加队伍颜色光柱。</p></div>
+    <div class="featCard glass liftable reveal d2"><h3><i></i>观战与语音</h3>
+      <p>被击落后自动进入观战视角，<kbd>左键</kbd>切换观战对象、滚轮缩放距离。联机支持<b>实时语音</b>：<kbd>T</kbd> 开麦、<kbd>Y</kbd> 收听。</p></div>
+  </div>
+</section>
+
+<!-- ============ 02 防空车突袭 ============ -->
+<section class="lsec">
+  <div class="lsecHead reveal"><div class="lsecNo">— 02 · AA ASSAULT</div>
+    <h2 class="lsecTitle">防空车突袭</h2>
+    <div class="lsecDesc">地面拦截 vs 低空突防 · 非对称对抗</div></div>
+  <div class="showVisual reveal d1">
+    <svg class="bigGun" data-px="-52" viewBox="0 0 900 380" role="img" aria-label="防空车">
+      <defs>
+        <linearGradient id="ggHull" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#5a7361"/><stop offset="1" stop-color="#2f4536"/></linearGradient>
+        <linearGradient id="ggTur" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#6d8a74"/><stop offset="1" stop-color="#3a5542"/></linearGradient>
+      </defs>
+      <path class="muzzle" d="M660 150 L860 44" stroke="#ffd27a" stroke-width="4" fill="none" opacity=".85"/>
+      <path class="muzzle" d="M660 176 L872 108" stroke="#ffd27a" stroke-width="4" fill="none" opacity=".6" style="animation-delay:-.2s"/>
+      <g class="turretG">
+        <rect x="560" y="212" width="120" height="52" rx="14" fill="url(#ggTur)" stroke="#c9e4cf" stroke-width="2"/>
+        <rect x="648" y="128" width="14" height="96" rx="6" fill="#445e4b" stroke="#c9e4cf" stroke-width="2" transform="rotate(-21 655 176)"/>
+        <rect x="672" y="128" width="14" height="96" rx="6" fill="#445e4b" stroke="#c9e4cf" stroke-width="2" transform="rotate(-21 679 176)"/>
+        <rect x="642" y="122" width="22" height="12" rx="4" fill="#6d8a74" transform="rotate(-21 653 128)"/>
+        <circle cx="588" cy="238" r="9" fill="#22352a"/>
+        <rect x="576" y="256" width="46" height="20" rx="6" fill="#22352a"/>
+        <rect x="576" y="256" width="10" height="20" rx="3" fill="#ffd27a"/></g>
+      <rect x="440" y="268" width="300" height="56" rx="16" fill="url(#ggHull)" stroke="#c9e4cf" stroke-width="2"/>
+      <rect x="452" y="324" width="276" height="30" rx="15" fill="#1c2b21"/>
+      <g fill="#39543f"><circle cx="490" cy="339" r="11"/><circle cx="540" cy="339" r="11"/><circle cx="590" cy="339" r="11"/>
+        <circle cx="640" cy="339" r="11"/><circle cx="690" cy="339" r="11"/></g>
+      <g><rect x="470" y="238" width="52" height="26" rx="6" fill="#8a6f3d" stroke="#ffe08a" stroke-width="2"/>
+        <path d="M470 251 h52" stroke="#ffe08a" stroke-width="2"/>
+        <circle cx="483" cy="251" r="4" fill="#ffd27a"/><circle cx="510" cy="251" r="4" fill="#ffd27a"/></g>
+      <ellipse cx="590" cy="366" rx="260" ry="14" fill="#1e3a5f" opacity=".2"/>
+    </svg>
+  </div>
+  <div class="featGrid">
+    <div class="featCard glass liftable reveal"><h3><i></i>双管高射机枪</h3>
+      <p><b>低伤害 + 高射速 + 散布</b>的弹幕武器。不需要精准点射，要用一片弹雨封锁敌机的航线，打的是提前量而不是反应。</p></div>
+    <div class="featCard glass liftable reveal d1"><h3><i></i>三档弱点伤害</h3>
+      <p>弹药箱 <b>×2</b>、炮塔 <b>×1.3</b>、车体 <b>×1</b>，车体血量 120。守住弹药箱是活下去的关键，被点掉后容错急速下降。</p></div>
+    <div class="featCard glass liftable reveal d2"><h3><i></i>溅射弹药</h3>
+      <p>机炮弹药会在<b>近车与落地爆炸</b>时产生范围伤，躲在机库后、贴脸对枪都不再安全——站位同样是博弈的一部分。</p></div>
+    <div class="featCard glass liftable reveal"><h3><i></i>固定点位博弈</h3>
+      <p>防空车是占点打法：地图预设 <b>7 个炮位</b>，各自视野与射界不同。老手会打出“换位—诱敌—反打”的连环节奏。</p></div>
+    <div class="featCard glass liftable reveal d1"><h3><i></i>炮塔俯仰操控</h3>
+      <p>鼠标控制炮塔旋转与俯仰，<kbd>W</kbd><kbd>S</kbd> 前后挪车，<kbd>A</kbd><kbd>D</kbd> 车体转向。俯仰角决定你能不能打到头顶掠过的敌机。</p></div>
+    <div class="featCard glass liftable reveal d2"><h3><i></i>同归于尽</h3>
+      <p>飞机<b>撞上防空车即同归于尽</b>。最后的近距离博弈不是比准头，而是比谁先沉不住气——这一撞往往就是整局的胜负手。</p></div>
+  </div>
+</section>
+
+<!-- ============ 03 三张地图（内联详解） ============ -->
+<section class="lsec" id="maps">
+  <div class="lsecHead reveal"><div class="lsecNo">— 03 · BATTLEFIELDS</div>
+    <h2 class="lsecTitle">三张作战空域</h2>
+    <div class="lsecDesc">楼房与山体是真实掩体 · 撞上即毁 · 子弹会被挡住</div></div>
+
+  <div class="mapShow glass reveal">
+    <svg class="mapPanorama" viewBox="0 0 1200 420" role="img" aria-label="太平洋海岛全景">
+      <defs><linearGradient id="pSky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#4da3e8"/><stop offset=".55" stop-color="#9fd0f2"/><stop offset="1" stop-color="#d9edfb"/></linearGradient>
+        <linearGradient id="pSea" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#4aa2d8"/><stop offset="1" stop-color="#175d9a"/></linearGradient>
+        <radialGradient id="pSun" cx=".5" cy=".5" r=".5">
+          <stop offset="0" stop-color="#fff9e0"/><stop offset="1" stop-color="#fff9e0" stop-opacity="0"/></radialGradient></defs>
+      <rect width="1200" height="420" fill="url(#pSky)"/>
+      <circle cx="1020" cy="86" r="150" fill="url(#pSun)"/><circle cx="1020" cy="86" r="40" fill="#fffbe8"/>
+      <g class="cloud c2" fill="#fff" opacity=".85"><ellipse cx="240" cy="80" rx="130" ry="26"/><ellipse cx="330" cy="62" rx="80" ry="18"/></g>
+      <g class="jetG" transform="translate(560,90) scale(1.6) rotate(-6)">
+        <path d="M32 9 C34 16 35 21 36 26 L53 39 L53 44 L36 37 L36 46 L43 51 L43 55 L32 51.5 L21 55 L21 51 L28 46 L28 37 L11 44 L11 39 L28 26 C29 21 30 16 32 9 Z" fill="#123a75" stroke="#cfe8ff" stroke-width="1.4"/></g>
+      <path class="trail" d="M330 112 H 550" stroke="#fff" stroke-width="4" fill="none" opacity=".7"/>
+      <rect y="300" width="1200" height="120" fill="url(#pSea)"/>
+      <g stroke="#bfe6ff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".5">
+        <path d="M80 336 h90"/><path d="M300 366 h120"/><path d="M620 340 h80"/><path d="M900 372 h130"/></g>
+      <ellipse cx="260" cy="304" rx="150" ry="16" fill="#c9b98a"/>
+      <path d="M180 302 L250 190 L330 302 Z" fill="#6f7a6a"/><path d="M258 302 L330 214 L400 302 Z" fill="#5d6b5a"/>
+      <g fill="#3f7a4a"><path d="M170 298 l8 -14 l8 14 Z"/><path d="M380 300 l7 -12 l7 12 Z"/></g>
+      <ellipse cx="640" cy="306" rx="120" ry="13" fill="#c9b98a"/><path d="M580 304 L636 226 L700 304 Z" fill="#65725f"/>
+      <ellipse cx="1000" cy="308" rx="130" ry="14" fill="#c9b98a"/>
+      <path d="M930 306 L1000 236 L1066 306 Z" fill="#5d6b5a"/><path d="M1010 306 L1072 252 L1130 306 Z" fill="#6f7a6a"/>
+      <g fill="#3f7a4a"><path d="M920 302 l7 -12 l7 12 Z"/><path d="M1110 302 l7 -12 l7 12 Z"/></g>
+    </svg>
+    <div class="mapTitle"><b>太平洋海岛</b><em>PACIFIC ISLANDS</em></div>
+    <div class="mapFacts">
+      <div class="fact"><h4>地形</h4><p>三座主岛呈品字形，岛间是毫无遮拦的海面走廊。全图<b>没有一栋人造建筑</b>，掩体只有山、云与太阳。</p></div>
+      <div class="fact"><h4>掩体</h4><p>中央主峰是制高点，贴山飞行可瞬间脱离视线，绕到山后就是喘息窗口——但对手也在重新规划截击。</p></div>
+      <div class="fact"><h4>氛围</h4><p>正午晴空，阳光近乎垂直洒在海面，<b>波光反射天空色</b>；远处海平线与天空在薄雾中融为一体。</p></div>
+      <div class="fact"><h4>战术</h4><p>掠海进场用反光干扰追踪；被咬尾时钻山沟；注意<b>空域边界持续掉血</b>，撞山即毁。</p></div>
+    </div>
+  </div>
+
+  <div class="mapShow glass reveal">
+    <svg class="mapPanorama" viewBox="0 0 1200 420" role="img" aria-label="现代都市全景">
+      <defs><linearGradient id="cSky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#3b76d6"/><stop offset=".6" stop-color="#8db9ec"/><stop offset="1" stop-color="#dcecf9"/></linearGradient>
+        <linearGradient id="cRiver" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#2e6a86"/><stop offset="1" stop-color="#1c4f70"/></linearGradient></defs>
+      <rect width="1200" height="420" fill="url(#cSky)"/>
+      <g class="cloud c1" fill="#fff" opacity=".7"><ellipse cx="220" cy="70" rx="120" ry="24"/><ellipse cx="310" cy="54" rx="70" ry="16"/></g>
+      <g fill="#9db4d6" opacity=".75">
+        <rect x="30" y="150" width="60" height="200"/><rect x="100" y="120" width="48" height="230"/>
+        <rect x="160" y="170" width="70" height="180"/><rect x="242" y="140" width="44" height="210"/>
+        <rect x="300" y="180" width="64" height="170"/><rect x="380" y="128" width="52" height="222"/></g>
+      <g fill="#3c5468">
+        <rect x="470" y="90" width="70" height="260"/><rect x="498" y="52" width="12" height="38"/>
+        <rect x="560" y="150" width="54" height="200"/><rect x="630" y="60" width="88" height="290"/>
+        <rect x="668" y="20" width="12" height="40"/><rect x="736" y="130" width="60" height="220"/></g>
+      <g fill="#9fd0f2" opacity=".35"><rect x="478" y="100" width="10" height="240"/><rect x="640" y="70" width="12" height="270"/></g>
+      <g fill="#ffe08a" opacity=".9">
+        <rect x="484" y="120" width="6" height="5"/><rect x="506" y="150" width="6" height="5"/>
+        <rect x="646" y="90" width="7" height="5"/><rect x="676" y="130" width="7" height="5"/>
+        <rect x="700" y="180" width="7" height="5"/><rect x="752" y="150" width="6" height="5"/></g>
+      <g fill="#2c4258">
+        <rect x="820" y="160" width="66" height="190"/><rect x="900" y="120" width="54" height="230"/>
+        <rect x="966" y="170" width="70" height="180"/><rect x="1050" y="140" width="52" height="210"/>
+        <rect x="1072" y="108" width="10" height="32"/></g>
+      <g fill="#4a6a38"><rect x="430" y="330" width="180" height="18" rx="6"/><rect x="470" y="316" width="100" height="14" rx="6"/></g>
+      <g fill="#5f8248"><circle cx="450" cy="332" r="7"/><circle cx="500" cy="336" r="6"/><circle cx="560" cy="332" r="7"/><circle cx="600" cy="336" r="6"/></g>
+      <rect y="352" width="1200" height="68" fill="url(#cRiver)"/>
+      <g stroke="#8ecff0" stroke-width="2.5" opacity=".45" fill="none">
+        <path d="M180 382 h90"/><path d="M460 396 h110"/><path d="M800 380 h100"/></g>
+      <g><rect x="120" y="322" width="420" height="8" fill="#4a5260"/><rect x="120" y="330" width="420" height="4" fill="#39424e"/>
+        <path d="M540 322 L660 300 L1140 300 L1140 308 L662 308 L540 330 Z" fill="#4a5260" opacity=".9"/>
+        <g stroke="#ffe08a" stroke-width="2" opacity=".8"><path d="M140 326 h24"/><path d="M300 326 h24"/><path d="M460 326 h24"/></g></g>
+      <g class="jetG" transform="translate(320,210) scale(1.5) rotate(-4)">
+        <path d="M32 9 C34 16 35 21 36 26 L53 39 L53 44 L36 37 L36 46 L43 51 L43 55 L32 51.5 L21 55 L21 51 L28 46 L28 37 L11 44 L11 39 L28 26 C29 21 30 16 32 9 Z" fill="#1d4ed8" stroke="#dbeefe" stroke-width="1.4"/></g>
+      <path class="trail" d="M120 232 H 316" stroke="#fff" stroke-width="4" fill="none" opacity=".65"/>
+    </svg>
+    <div class="mapTitle"><b>现代都市</b><em>METROPOLIS</em></div>
+    <div class="mapFacts">
+      <div class="fact"><h4>地形</h4><p>曼哈顿式环水都市：网格街区、退台天台、尖顶天线、玻璃幕墙。中央公园是钢筋森林里唯一的空隙。</p></div>
+      <div class="fact"><h4>掩体</h4><p><b>贴楼飞行即毁，子弹会被楼体挡住</b>。绕楼追逐时每一栋楼都是一次攻防转换，卡楼角急转是标准脱锁动作。</p></div>
+      <div class="fact"><h4>氛围</h4><p>玻璃幕墙反射天光成一片<b>流动的银蓝</b>，高架车灯连成光带，运河水面把楼影揉碎——最有生活气息的战场。</p></div>
+      <div class="fact"><h4>战术</h4><p>进楼前先想好脱离路线；<b>运河沿线是全图唯一长直走廊</b>；擦顶需慎防尖顶天线即毁。</p></div>
+    </div>
+  </div>
+
+  <div class="mapShow glass reveal">
+    <svg class="mapPanorama" viewBox="0 0 1200 420" role="img" aria-label="军事基地全景">
+      <defs><linearGradient id="bSky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#5aa8ee"/><stop offset=".6" stop-color="#a8cdf0"/><stop offset="1" stop-color="#e3f2fc"/></linearGradient>
+        <linearGradient id="bGround" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#57713f"/><stop offset="1" stop-color="#3d5230"/></linearGradient></defs>
+      <rect width="1200" height="420" fill="url(#bSky)"/>
+      <g class="cloud c2" fill="#fff" opacity=".8"><ellipse cx="260" cy="66" rx="120" ry="24"/><ellipse cx="350" cy="50" rx="70" ry="16"/></g>
+      <g class="jetG" transform="translate(150,96) scale(1.4) rotate(-6)">
+        <path d="M32 9 C34 16 35 21 36 26 L53 39 L53 44 L36 37 L36 46 L43 51 L43 55 L32 51.5 L21 55 L21 51 L28 46 L28 37 L11 44 L11 39 L28 26 C29 21 30 16 32 9 Z" fill="#123a75" stroke="#cfe8ff" stroke-width="1.4"/></g>
+      <path class="trail" d="M0 118 H 146" stroke="#fff" stroke-width="4" fill="none" opacity=".7"/>
+      <ellipse cx="600" cy="330" rx="560" ry="90" fill="url(#bGround)"/>
+      <ellipse cx="600" cy="316" rx="540" ry="66" fill="#617a48"/>
+      <rect x="250" y="272" width="500" height="52" fill="#3d3f43"/>
+      <g fill="#e8e8e0"><rect x="256" y="296" width="488" height="3"/></g>
+      <g stroke="#e8e8e0" stroke-width="3"><path d="M300 272 v52"/><path d="M420 272 v52"/><path d="M540 272 v52"/><path d="M660 272 v52"/></g>
+      <g fill="#e8e8e0"><path d="M254 298 l22 -12 l0 24 Z"/><path d="M746 298 l-22 -12 l0 24 Z"/></g>
+      <g><path d="M120 236 q0 -34 34 -34 q34 0 34 34 l0 26 l-68 0 Z" fill="#7d8577"/><rect x="120" y="258" width="68" height="6" fill="#5c6456"/>
+        <path d="M230 242 q0 -30 30 -30 q30 0 30 30 l0 20 l-60 0 Z" fill="#7d8577"/><rect x="230" y="258" width="60" height="6" fill="#5c6456"/></g>
+      <g><rect x="836" y="216" width="14" height="46" fill="#8a929e"/>
+        <rect x="824" y="192" width="38" height="26" rx="4" fill="#6d7683"/><rect x="828" y="197" width="30" height="8" rx="2" fill="#bfe3ff"/></g>
+      <g class="radarG"><rect x="1038" y="106" width="30" height="7" rx="3.5" fill="#cfe4ee"/></g>
+      <rect x="1048" y="112" width="10" height="34" fill="#8a929e"/><circle cx="1053" cy="110" r="4" fill="#ff6b5e"/>
+      <g><ellipse cx="920" cy="252" rx="46" ry="12" fill="#5a5142"/><rect x="896" y="240" width="48" height="14" rx="4" fill="#16281f"/>
+        <g transform="rotate(-24 928 240)"><rect x="912" y="228" width="4.5" height="22" rx="2" fill="#16281f"/><rect x="922" y="228" width="4.5" height="22" rx="2" fill="#16281f"/></g></g>
+      <g><ellipse cx="420" cy="238" rx="46" ry="12" fill="#5a5142"/><rect x="396" y="226" width="48" height="14" rx="4" fill="#16281f"/>
+        <g transform="rotate(-20 428 226)"><rect x="412" y="214" width="4.5" height="22" rx="2" fill="#16281f"/><rect x="422" y="214" width="4.5" height="22" rx="2" fill="#16281f"/></g></g>
+      <g fill="#9aa7b0"><circle cx="740" cy="250" r="17"/><circle cx="776" cy="250" r="17"/></g>
+      <g stroke="#5d6a74" stroke-width="2"><circle cx="740" cy="250" r="10"/><circle cx="776" cy="250" r="10"/></g>
+      <ellipse cx="600" cy="352" rx="580" ry="52" fill="none" stroke="#a8d8f2" stroke-width="4" opacity=".5"/>
+    </svg>
+    <div class="mapTitle"><b>军事基地</b><em>MILITARY BASE</em></div>
+    <div class="mapFacts">
+      <div class="fact"><h4>地形</h4><p>紧凑环形要塞小岛：真实标线跑道横贯全岛，机库、塔台、<b>旋转雷达</b>、油罐一应俱全，外圈是一望无际的海面。</p></div>
+      <div class="fact"><h4>防空车主场</h4><p>预设 <b>7 个炮位</b>：跑道两端、机库翼侧、雷达高地、油罐后坡。弹药箱 2 倍弱点让每个炮位都是双刃剑。</p></div>
+      <div class="fact"><h4>攻防</h4><p>飞机要<b>低空突防贴脸轰炸</b>：超低空掠入，躲进射界盲区投弹；而撞上防空车是同归于尽——拼的是心理。</p></div>
+      <div class="fact"><h4>战术</h4><p>飞机进岛前先观察炮口指向；防空车被点掉弹药箱前要<b>主动换位</b>；跑道中段毫无遮拦，留给敢拼的人。</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04 操控指南 ============ -->
+<section class="lsec">
+  <div class="lsecHead reveal"><div class="lsecNo">— 04 · CONTROLS</div>
+    <h2 class="lsecTitle">操作说明</h2>
+    <div class="lsecDesc">电脑键鼠与手机触屏，两套操作都按端游 / 手游标配设计</div></div>
+  <div class="ctrlGrid">
+    <div class="ctrlCard glass reveal">
+      <h3>✈ 飞机（空战模式）</h3>
+      <div class="ctrlRow"><span>视角</span><span>鼠标移动</span></div>
+      <div class="ctrlRow"><span>机炮</span><span><kbd>左键</kbd></span></div>
+      <div class="ctrlRow"><span>瞄准放大</span><span><kbd>右键</kbd> 按住</span></div>
+      <div class="ctrlRow"><span>加速 / 减速</span><span><kbd>W</kbd> / <kbd>S</kbd></span></div>
+      <div class="ctrlRow"><span>暂停</span><span><kbd>Esc</kbd>（点击画面继续）</span></div>
+      <div class="ctrlRow"><span>语音</span><span><kbd>T</kbd> 开麦 · <kbd>Y</kbd> 收听</span></div>
+      <div class="ctrlRow"><span>全局静音</span><span><kbd>M</kbd></span></div>
+      <div class="ctrlRow"><span>观战</span><span><kbd>左键</kbd> 切目标 · <kbd>滚轮</kbd> 缩放</span></div>
+    </div>
+    <div class="ctrlCard glass reveal d1">
+      <h3>📱 手机端 / 防空车</h3>
+      <div class="ctrlRow"><span>摇杆上下</span><span>加速 / 减速</span></div>
+      <div class="ctrlRow"><span>摇杆左右</span><span>左飞 / 右飞</span></div>
+      <div class="ctrlRow"><span>屏幕滑动</span><span>控制视角 / 炮塔</span></div>
+      <div class="ctrlRow"><span>右侧按键</span><span>开火 / 瞄准</span></div>
+      <div class="ctrlRow"><span>防空车挪车</span><span><kbd>W</kbd><kbd>S</kbd> 前后 · <kbd>A</kbd><kbd>D</kbd> 转向</span></div>
+      <div class="ctrlRow"><span>防空车开火</span><span><kbd>左键</kbd> 双管高射机枪</span></div>
+      <div class="ctrlRow"><span>撞击规则</span><span>撞海撞地撞楼即毁 · 友军轻擦各扣血</span></div>
+      <div class="ctrlRow"><span>出界与超高</span><span>警告后持续掉血</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 05 无服务器联机（浅色玻璃） ============ -->
+<section class="lsec" id="net">
+  <div class="lsecHead reveal"><div class="lsecNo">— 05 · NO SERVER, NO LAG AUTHORITY</div>
+    <h2 class="lsecTitle">创新式无服务器联机</h2>
+    <div class="lsecDesc">WebRTC 点对点直连 · 房主浏览器担任权威服务器 · 市售网游手感</div></div>
+  <div class="netGrid">
+    <div class="netCard glass liftable reveal">
+      <h3>传统网游</h3><div class="ncSub">CLIENT → GAME SERVER → CLIENT</div>
+      <svg viewBox="0 0 320 168">
+        <rect x="128" y="16" width="64" height="40" rx="8" fill="#aebdd2"/>
+        <rect x="140" y="26" width="40" height="6" rx="3" fill="#8895a8"/><rect x="140" y="38" width="28" height="6" rx="3" fill="#8895a8"/>
+        <g class="nline" fill="none" stroke-width="2">
+          <path d="M130 64 C110 98 80 110 52 122"/><path d="M160 64 L160 122"/><path d="M190 64 C210 98 240 110 268 122"/></g>
+        <g fill="#93a2b8"><circle cx="48" cy="132" r="13"/><circle cx="160" cy="132" r="13"/><circle cx="272" cy="132" r="13"/></g></svg>
+      <p>每一发子弹都要绕远程服务器一圈：租机器、看机房脸色、高峰期卡顿，停服即死。</p>
+    </div>
+    <div class="netCard glass liftable reveal d1">
+      <h3>苍穹对决</h3><div class="ncSub">PLAYER ↔ PLAYER · HOST AUTHORITY</div>
+      <svg viewBox="0 0 320 168">
+        <g class="nline" fill="none" stroke-width="2.4">
+          <path d="M160 88 L64 32"/><path d="M160 88 L256 32"/><path d="M160 88 L36 94"/>
+          <path d="M160 88 L284 94"/><path d="M160 88 L92 146"/><path d="M160 88 L236 146"/></g>
+        <g class="nnode"><circle cx="160" cy="88" r="17" fill="#38bdf8"/><circle cx="160" cy="88" r="8" fill="#eaf6ff"/></g>
+        <g fill="#1d4ed8"><circle cx="64" cy="32" r="9"/><circle cx="256" cy="32" r="9"/><circle cx="36" cy="94" r="9"/>
+          <circle cx="284" cy="94" r="9"/><circle cx="92" cy="146" r="9"/><circle cx="236" cy="146" r="9"/></g></svg>
+      <p>玩家直连、20Hz 权威快照、本地预判即时反馈、掉线秒级判罚——零服务器成本。</p>
+    </div>
+  </div>
+  <div class="stepRow">
+    <div class="stepCard glass reveal"><div class="sn">STEP 01</div><h4>房主生成邀请码</h4>
+      <p>点「创建房间」选择规模并生成邀请码，通过微信 / QQ 发给好友。</p></div>
+    <div class="stepCard glass reveal d1"><div class="sn">STEP 02</div><h4>好友生成应答码</h4>
+      <p>好友粘贴邀请码生成应答码，把应答码发回给房主。</p></div>
+    <div class="stepCard glass reveal d2"><div class="sn">STEP 03</div><h4>粘贴连接即开打</h4>
+      <p>房主逐个粘贴应答码连接，全员到齐后自动进入对局。</p></div>
+  </div>
+  <div class="netBadges reveal">
+    <div class="netBadge"><b>0</b> 元服务器开销</div><div class="netBadge"><b>20Hz</b> 权威状态同步</div>
+    <div class="netBadge"><b>P2P</b> 数据通道直连</div><div class="netBadge"><b>1v1/3v3/5v5</b> 全支持</div>
+  </div>
+</section>
+
+<!-- ============ 06 技术专栏 ============ -->
+<section class="lsec" id="tech">
+  <div class="lsecHead reveal"><div class="lsecNo">— 06 · UNDER THE HOOD</div>
+    <h2 class="lsecTitle">联机是怎么实现的？</h2>
+    <div class="lsecDesc">三篇文章讲透网络通讯 · 第二篇附可交互架构演示图</div></div>
+  <div class="artRow">
+    <a class="artCard glass liftable reveal" href="/articles/p2p/">
+      <div class="mcBody"><div class="artNo">文章 · 一</div>
+        <div class="mcName">零服务器联机<span class="artTag">WebRTC</span></div>
+        <div class="mcDesc">纯 WebRTC 数据通道、手动信令交换与双通道设计。</div>
+        <span class="artRead">阅读全文 →</span></div></a>
+    <a class="artCard glass liftable reveal d1" href="/articles/host-world/">
+      <div class="mcBody"><div class="artNo">文章 · 二</div>
+        <div class="mcName">房主小世界<span class="artTag">架构</span></div>
+        <div class="mcDesc">星型拓扑、房主权威、20Hz 快照、掉线判罚，附架构演示图。</div>
+        <span class="artRead">阅读全文 →</span></div></a>
+    <a class="artCard glass liftable reveal d2" href="/articles/prediction/">
+      <div class="mcBody"><div class="artNo">文章 · 三</div>
+        <div class="mcName">预判与回溯<span class="artTag">网络同步</span></div>
+        <div class="mcDesc">本地预判即时反馈、权威对账回滚、延迟补偿。</div>
+        <span class="artRead">阅读全文 →</span></div></a>
+  </div>
+</section>
+
+<div class="statBand">
+  <div class="statCell glass reveal"><b data-count="3">0</b><span>作战地图</span></div>
+  <div class="statCell glass reveal d1"><b data-count="2">0</b><span>玩法模式</span></div>
+  <div class="statCell glass reveal d2"><b data-count="5" data-suffix="v5">0</b><span>最大团战规模</span></div>
+  <div class="statCell glass reveal d3"><b data-count="100" data-suffix="%">0</b><span>免费 &amp; 无广告弹窗</span></div>
+</div>
+<footer class="lfoot">
+  <div><b>SKY DUEL</b> · 苍穹对决 — 纯前端 3D 空战网页游戏</div>
+  <div>Three.js 本地渲染 · WebRTC 点对点联机 · 打开浏览器即玩</div>
+</footer>
+
+</div>
+<script type="module" src="./js/landing.js?v=1436"></script>
+</body>
+</html>

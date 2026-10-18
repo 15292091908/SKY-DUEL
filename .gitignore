@@ -1,0 +1,25 @@
+# 构建产物与本机配置（不要提交）
+build/
+.gradle/
+.idea/
+*.iml
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# 打包/发布产物
+发布/
+*.apk
+app-debug.apk
+
+# 依赖与工具目录
+node_modules/
+
+# 开发辅助（本地记忆/临时脚本/备份）
+.workbuddy/
+
+# 系统垃圾
+.DS_Store
+Thumbs.db
+*.log

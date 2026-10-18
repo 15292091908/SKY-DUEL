@@ -1,0 +1,14 @@
+/* js/modes/aavs/lobby.css —— 本模式的大厅皮肤（切到本模式时由 mode.js 动态注入）
+   只作用于 #menu[data-mode="aavs"]，不会污染其它模式。 */
+#menu[data-mode="aavs"]{ --gm-accent:#d97706; --gm-accent-soft:#d9770622; --gm-accent-line:#d9770666; }
+#menu[data-mode="aavs"] .gmPill.on{
+  color:#d97706;
+  border-color:var(--gm-accent-line);
+  box-shadow:0 8px 22px #d977062e;
+}
+#menu[data-mode="aavs"] .bigPill:hover{ border-color:var(--gm-accent-line); }
+#menu[data-mode="aavs"] .zoomInfo{ color:#d97706; }
+#menu[data-mode="aavs"] .menuGmBar::after{
+  content:""; position:absolute; left:50%; bottom:-7px; width:46px; height:3px; border-radius:2px;
+  transform:translateX(-50%); background:var(--gm-accent); opacity:.75;
+}

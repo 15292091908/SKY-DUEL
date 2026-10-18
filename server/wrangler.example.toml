@@ -1,0 +1,15 @@
+# 苍穹对决 · 信令服务（Cloudflare Worker）部署配置
+# 用法：本目录执行  npx wrangler deploy
+# 说明：ROOMS 是 Durable Object 绑定，每个 6 位房间码一个实例，状态存 DO storage。
+
+name = "skyduel-signal"
+main = "cloudflare-worker.js"
+compatibility_date = "2025-01-01"
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "Room"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room"]

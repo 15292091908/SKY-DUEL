@@ -1,0 +1,35 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.skyduel.game'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.skyduel.game'
+        minSdk 24
+        targetSdk 36
+        versionCode 61
+        versionName '1.6.22'   // v3.6.0：模式拆分（空战 / 防空车各自独立代码，assets 内两套，按需加载）   // v3.5.4：自炸播报改「X 误伤 X」（不计人头、阵亡照记）+ 帮助面板内滚轮/拖动不再穿透到菜单 3D 场景   // v3.5.3：自炸/自撞不计人头（自己炸死自己不再 +1 人头、播报改「坠毁」），阵亡照记   // v3.5.2：安卓皇牌空战式操控（摇杆=俯仰+转向、视角锁机头、独立油门按钮、推杆方向可切换）+ 被队友误杀不计阵亡 + 键位编辑覆盖武器/油门键   // v3.5.1：火箭弹撞楼/山/障碍起爆（新增 rayHitWorld 线段检测，不再穿模）+ 友伤机制（误杀不计人头、中下方「误伤队友」警示、播报「X 误杀 Y」）   // v3.5.0：main.js 拆分终结 —— 拆出 units/markers/camera/lobby/pick/netev/sdp/match/loop 共 9 模块，main.js 变为 11 行纯入口（无循环依赖）；准星校真补丁随代码迁至 camera.js   // v3.4.1：main.js 继续模块化（抽出 voice/scene3d/spectate）+ 修复 ++myFireSeq / sbRows 只读绑定崩溃 + 全模块 ?v= 统一（消除重复实例）   // v3.4：火箭动力段（先平飞500m再下坠）、击杀数全路径修复、拆分 core/hud 模块   // v3.3：火箭全面友伤+打地板自伤、AI 双武器、main.js 拆分为 config/state 模块   // 火箭下坠 + 溅射收紧与全端可见 + AI 防空车火箭（含提前量）+ 飞机 2 号武器（空战火箭炮 / 防空车模式高爆子弹）   // 防空车血量 150 + 火箭炮（1/2 切换、近炸引信一击致命、波及队友）   // v3.0 架构：客户端判定命中+房主位置校验、取消本地预判、80ms 延迟门槛   // 命中错配时回 dmgReject，修复开火者端预判血条残留   // 补漏：startMapLobby 选图回调仍提前换图（上版只改了 returnToLobby 一处）   // 房主换图时机对齐加入方：完成阵营分配开战瞬间才切图   // 清理菜单展示实体：修复空战选图后选阵营空窗出现"水上飘飞机"   // 修复选图大厅地图卡不渲染（renderMapCards 兜底选择器）   // 地图系统重构（world/ 目录+动态选图卡）、全模式选阵营、击杀播报修复、摇杆去"飞行"标注、触屏收窄安卓端   // 赛后战绩表（净击杀排名 + txt 导出）、防空车碰撞体积、对撞本地先判死、启动版本校验强更
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+// WebView 宿主：游戏本体为 assets/web/ 下的网页版快照（js/ + vendor/three.module.min.js）
+// androidx.webkit 提供 WebViewAssetLoader —— 以 https 域名提供本地资源，
+// 使页面处于安全上下文（WebRTC DataChannel / 剪贴板 / getUserMedia 必需）
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+}

@@ -1,0 +1,8 @@
+{
+  "id": "dogfight",
+  "name": "空战对决",
+  "order": 10,
+  "accent": "#2563eb",
+  "lobbyCss": "lobby.css",
+  "defaultMap": "island"
+}

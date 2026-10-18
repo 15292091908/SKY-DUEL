@@ -1,0 +1,38 @@
+{
+  "generatedAt": "2026-10-18T08:34:05.619Z",
+  "modes": [
+    {
+      "dir": "air",
+      "id": "dogfight",
+      "name": "空战对决",
+      "order": 10,
+      "accent": "#2563eb",
+      "lobbyCss": "lobby.css",
+      "defaultMap": "island",
+      "hasNet": true,
+      "hasMaps": true
+    },
+    {
+      "dir": "aavs",
+      "id": "aavs",
+      "name": "防空车突袭",
+      "order": 20,
+      "accent": "#d97706",
+      "lobbyCss": "lobby.css",
+      "defaultMap": "base",
+      "hasNet": true,
+      "hasMaps": true
+    },
+    {
+      "dir": "heli",
+      "id": "heli",
+      "name": "直升机突袭",
+      "order": 30,
+      "accent": "#059669",
+      "lobbyCss": "lobby.css",
+      "defaultMap": "base",
+      "hasNet": true,
+      "hasMaps": true
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FileProvider 可共享的路径：自更新下载的 APK 落在 getExternalFilesDir(DIRECTORY_DOWNLOADS) -->
+<paths>
+    <external-files-path name="downloads" path="Download/" />
+    <files-path name="internal" path="Download/" />
+</paths>

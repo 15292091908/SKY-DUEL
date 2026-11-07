@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="zh-CN" data-page-node-id="8fCs5xmwjZbGDcsrubjvVA">
+<head data-page-node-id="ZaNr1JeNCvqrF9cQwKdbGo">
+<meta charset="utf-8" data-page-node-id="1GtgIL9vRQ89MzdlOotrV6">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" data-page-node-id="yMmxKtoiaOThRbOhcKg5Bf">
+<title>房主小世界：你的浏览器就是服务器 · 苍穹对决技术专栏</title>
+<meta name="description" content="没有服务器，谁说了算？解密《苍穹对决》的房主小世界架构：星型拓扑、房主权威结算、20Hz 快照广播、开火上报与掉线判罚，附可交互架构演示图。" data-page-node-id="LzDayeLxx1rsEOD1RDpIDA">
+<meta name="keywords" content="房主小世界,星型拓扑,权威服务器,主机权威,WebRTC联机,苍穹对决,Sky Duel,游戏架构" data-page-node-id="blk4MUkka2FoYrX4W3VPty">
+<meta name="robots" content="index,follow" data-page-node-id="AsFcOwLz21k2gcPr9IGc7o">
+<meta name="theme-color" content="#eef6fd" data-page-node-id="CtdxK4WB4StoRhXEN2HZ6E">
+<meta property="og:type" content="article" data-page-node-id="M4IOEzJEUUPxN0HVCpVODH">
+<meta property="og:title" content="房主小世界：你的浏览器就是服务器" data-page-node-id="sa2oe4wehUGnrBBTqkgpEy">
+<meta property="og:description" content="解密《苍穹对决》的房主权威架构：星型拓扑、20Hz 快照、掉线判罚，附可交互架构演示图。" data-page-node-id="H3IHGE1bmUYDwNW2U6fqvO">
+<meta property="og:locale" content="zh_CN" data-page-node-id="KoSNfbWX0B7MDwB36ne2GY">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" data-page-node-id="set2NCfRaiQWIxCoclsJcK">
+<link rel="canonical" href="https://game.4365754.xyz/articles/host-world/">
+<meta property="og:url" content="https://game.4365754.xyz/articles/host-world/">
+<meta property="og:image" content="https://game.4365754.xyz/favicon.svg">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "苍穹对决",
+          "item": "https://game.4365754.xyz/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "技术专栏",
+          "item": "https://game.4365754.xyz/#tech"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "房主小世界"
+        }
+      ]
+    },
+    {
+      "@type": "BlogPosting",
+      "@id": "https://game.4365754.xyz/articles/host-world/#article",
+      "headline": "房主小世界",
+      "description": "解密《苍穹对决》的房主权威架构：星型拓扑、房主权威结算、20Hz 快照广播、开火上报与掉线判罚，附可交互架构演示图。",
+      "inLanguage": "zh-CN",
+      "datePublished": "2026-09-06",
+      "dateModified": "2026-09-06",
+      "author": {
+        "@type": "Organization",
+        "name": "Sky Duel",
+        "url": "https://game.4365754.xyz/"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Sky Duel",
+        "url": "https://game.4365754.xyz/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://game.4365754.xyz/favicon.svg"
+        }
+      },
+      "mainEntityOfPage": "https://game.4365754.xyz/articles/host-world/",
+      "image": "https://game.4365754.xyz/favicon.svg",
+      "articleSection": "权威架构",
+      "isPartOf": {
+        "@id": "https://game.4365754.xyz/#website"
+      },
+      "about": {
+        "@type": "VideoGame",
+        "name": "苍穹对决",
+        "alternateName": "Sky Duel",
+        "url": "https://game.4365754.xyz/play/"
+      }
+    }
+  ]
+}
+</script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--accent:#2563eb;--sky:#38bdf8;--text:#123a75;--body:#2e4c6e;--muted:#64748b;
+    --border:rgba(37,99,235,.12);--shadow:0 14px 36px rgba(0,0,0,.08)}
+  html{scroll-behavior:smooth}
+  body{background:#eef6fd;color:var(--text);font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(circle at 85% 6%,rgba(56,189,248,.14),transparent 24rem),
+      radial-gradient(circle at 8% 30%,rgba(37,99,235,.08),transparent 22rem)}
+  .topbar{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;
+    padding:13px 22px;background:rgba(238,246,253,.82);backdrop-filter:blur(14px) saturate(1.8);
+    border-bottom:1px solid var(--border)}
+  .back{display:inline-flex;align-items:center;gap:7px;text-decoration:none;font-size:13.5px;font-weight:bold;
+    color:#1d4ed8;background:rgba(255,255,255,.75);border:1px solid var(--border);border-radius:999px;
+    padding:8px 20px;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s}
+  .back:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(37,99,235,.22)}
+  .brand{font-weight:900;font-style:italic;letter-spacing:2px;color:#1d4ed8;font-size:15px;text-decoration:none}
+  .wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:58px 20px 60px}
+  .kicker{font-size:13px;font-style:italic;font-weight:900;color:#7cc4f5;letter-spacing:4px}
+  h1{font-size:clamp(28px,4vw,42px);font-weight:900;font-style:italic;letter-spacing:1px;line-height:1.35;margin:12px 0 12px;
+    background:linear-gradient(120deg,#123a75,#2563eb 60%,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .meta{font-size:13px;color:var(--muted);letter-spacing:1px;padding-bottom:22px;
+    border-bottom:1px solid var(--border);margin-bottom:34px}
+  .content h2{font-size:21px;font-weight:900;color:var(--text);margin:40px 0 14px;letter-spacing:1px;
+    padding-left:14px;border-left:4px solid var(--accent)}
+  .content p{font-size:16px;line-height:2.1;color:var(--body);margin:0 0 20px}
+  .content b{color:var(--accent)}
+  .content ul{margin:0 0 22px;padding-left:26px}
+  .content li{font-size:15.5px;line-height:2;color:var(--body);margin-bottom:10px}
+  .content li b{color:var(--accent)}
+  .callout{background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:16px;
+    padding:18px 22px;margin:0 0 22px;font-size:15px;line-height:2;color:var(--body)}
+  .frame{width:100%;height:min(72vh,640px);border:1px solid var(--border);border-radius:18px;
+    box-shadow:var(--shadow);background:#0b1e3d;margin:20px 0 10px;display:block}
+  .caption{font-size:13px;color:#6b87a8;text-align:center;margin:0 0 26px;letter-spacing:1px}
+  .pager{display:flex;justify-content:space-between;gap:14px;margin-top:64px;padding-top:28px;
+    border-top:1px solid var(--border);flex-wrap:wrap}
+  .pager a{flex:1;min-width:220px;text-decoration:none;background:rgba(255,255,255,.75);border:1px solid var(--border);
+    border-radius:16px;padding:16px 20px;box-shadow:var(--shadow);transition:transform .25s,box-shadow .25s}
+  .pager a:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(37,99,235,.2)}
+  .pager .dir{font-size:12px;color:var(--muted);letter-spacing:2px}
+  .pager .pt{font-weight:900;color:#1d4ed8;font-size:15px;margin-top:4px}
+  footer{position:relative;z-index:1;text-align:center;padding:26px 20px 42px;color:#6b87a8;font-size:13px}
+  footer b{font-style:italic;color:#1d4ed8}
+  @media (max-width:640px){.pager .prev{display:none}.pager a{flex:none;width:100%}}
+</style>
+</head>
+<body data-page-node-id="PxfYnkFtLK6bHwlBk4Q0GD">
+<div class="topbar" data-page-node-id="yhtpk2oS0kPDQTXfN1DWdS">
+  <a class="back" href="/" data-page-node-id="qOE63ybmWWP0Y9ZiKqk8q0">← 返回首页</a>
+  <a class="brand" href="/#tech" data-page-node-id="o2BYGM3qi0ulKVSPrhFAOg">SKY DUEL · 技术专栏</a>
+</div>
+<div class="wrap" data-page-node-id="fLcj03RM4OgaNRswBkxFiA">
+  <div class="kicker" data-page-node-id="Fp4B8K6a9012IZiVGF5bQ6">UNDER THE HOOD · 02</div>
+  <h1 data-page-node-id="toA5YSlComQGXmSPLjBxzO">房主小世界：你的浏览器就是服务器</h1>
+  <div class="meta" data-page-node-id="eObzBmet0W2ByRXw9HT8ph">《苍穹对决》技术专栏 · 权威架构篇 · 约 2000 字 · 阅读 6 分钟</div>
+  <div class="content" data-page-node-id="gcJncCuGGzGFk9iBzFBxUa">
+    <p data-page-node-id="6bhwE6ZBgGL8Ho1ajmTmDh">上一篇讲到，《苍穹对决》用 WebRTC 让玩家浏览器两两直连，连信令服务器都省了。但连接建立只解决了"怎么连上"，一个更尖锐的问题立刻浮现：<b data-page-node-id="TdJGvWYwlbyjD88ST8Gf9J">没有服务器，谁说了算？</b>两发子弹同时命中，谁死谁活听谁的？一个玩家说自己没死，另一个说自己打死了，裁判在哪？这篇就讲《苍穹对决》给出的答案：听房主的。</p>
+
+    <h2 data-page-node-id="8WKSdMtbXG2pP5TwjcBiMR">一、"谁说了算"：没有裁判的球场</h2>
+    <p data-page-node-id="zU0G7YXBvOyjNdFBsuVw1F">网络对战里有一个铁律：<b data-page-node-id="wAvmKBj5xMi1fLgr8Z6ADH">状态必须有一个权威来源</b>。如果每台设备都自己判断"我打中了他"，两台设备的判定结果几乎必然不同——网络延迟让它们看到的世界本来就是两个略有差异的版本。传统网游里，这个裁判是服务器；没有服务器的游戏，必须自己造一个裁判出来。</p>
+    <p data-page-node-id="Y7uM9nfj7TkfRKwHosU2ST">《苍穹对决》把裁判角色交给了<b data-page-node-id="2ObW8Jovmk4Mu0SBWYbff2">房主</b>——创建房间的那个玩家。他的浏览器在这场对局中的身份不再是普通客户端，而是货真价实的"权威服务器"：伤害结算、碰撞判定、死亡与复活、回合推进、比分统计，全部由房主最终裁定。其余玩家看到的世界，本质上是房主所认定的世界的投影。</p>
+    <p data-page-node-id="spZ8TRvvD7qKDFET6x9N7e">熟悉电竞的读者会发现，这个思路和局域网时代《魔兽争霸》《星际争霸》的"主机"一模一样：联机房间里总有一个人是 Host，他的机器就是这场比赛的真理之源。区别只在于，《苍穹对决》把这套机制从局域网搬到了 WebRTC 上——没有局域网，玩家们隔着公网直连，但"围绕一个权威组建世界"的骨架分毫未动。<b data-page-node-id="W8FSxs6OEIzVFrQpDEDShA">被验证了二十年的模型，不需要发明第二次。</b></p>
+
+    <h2 data-page-node-id="QBKuggGfusV1UYc0BMGtQJ">二、星型拓扑：只连房主一个人</h2>
+    <p data-page-node-id="a7IKPvgXgxm6XoXr5Zd7xp">裁判有了，连接结构怎么设计？如果 10 个玩家两两直连（全网状），需要维护 45 条连接：每个人的上行带宽被放大数倍，任何一条链路抖动都会让"每个人看到的世界"出现裂缝。《苍穹对决》改成<b data-page-node-id="PIMlgAng0QXeGsxxKiVvvo">星型</b>：所有玩家只与房主建立一条 WebRTC 连接，玩家之间互不直连。</p>
+    <p data-page-node-id="FwMnj86tLlJ9XoFGURly57">这样一来，5v5 对局里房主维护 9 条连接，其余每个玩家只维护 1 条——连接数从 O(n²) 骤降到 O(n)。房主收到所有人的状态，汇成一张全景图，再广播回去。整个对局像一个小小的"世界"围绕着房主旋转——这就是"房主小世界"这个名字的由来。下面的架构演示图是可交互的，可以直观看到所有玩家如何围绕房主组网：</p>
+    <iframe class="frame" title="房主小世界架构演示图（可交互）" loading="lazy" src="/host-mini-world-arch.html?static" data-page-node-id="mBXENmDF5zpnxW57dMeUZH"></iframe>
+    <div class="caption" data-page-node-id="RSihREvaUH1hDX6wcPjSQc">▲ 房主小世界架构演示图：星型拓扑 · 房主权威（?static 参数为静态模式）</div>
+
+    <h2 data-page-node-id="8wjP76cRFq8pwuRofJOJl1">三、房主的一天：20Hz 里的权威工作流</h2>
+    <p data-page-node-id="vdQG00EoEVB7eyYDqLyu3c">房主和普通玩家之间的一切通信都遵循一个固定节拍——<b data-page-node-id="t35LlgiV5cHJz39bJoo0Db">20Hz</b>，即每秒 20 个来回：</p>
+    <ul data-page-node-id="3ao8x8KfsGPJReD07zG8Oc">
+      <li data-page-node-id="luopJRAZ6XelAmD9opCoZw"><b data-page-node-id="skrFde8XbYJXphFtRB1Hrm">非房主玩家</b>：每秒 20 次把自己的操作与状态（<b data-page-node-id="FZIRMpk3USOKtajaT7iPIR">upd</b>）上报给房主；同时接收房主广播的权威快照（<b data-page-node-id="oQMjD35EnfdEWZm2pDPOXL">sync</b>），把房主认定的世界覆盖到本地。</li>
+      <li data-page-node-id="sPQ6HaOEvBYo2d6rE4VMOK"><b data-page-node-id="UKatBwaYbw1GCDimfDtOlS">房主</b>：收集所有人的 upd，在本地的"权威世界"里跑完整套结算——飞行物理、命中判定、碰撞、环境伤害——然后每秒 20 次把权威快照发给所有人。</li>
+    </ul>
+    <p data-page-node-id="zoFkp6NoK4XrfGanrPr4Ex">快照走的正是上一篇说的 state 不可靠通道：丢一帧无所谓，50 毫秒后必有更新。而死亡、回合切换、比分这些关键裁定走 event 可靠通道，一次都不能丢。</p>
+    <p data-page-node-id="x516D7JE6tpNP323c3qGj1">顺便回答一个常见疑问：为什么是 20Hz 而不是 60Hz？人眼对"别人飞机怎么动"的感知远没有对自己的操作敏感——自己的飞机由本地渲染 60 帧，别人的飞机靠 20Hz 快照插值出来，视觉上已经足够顺滑。而带宽是刚性的：5v5 每秒 20 次全量状态广播，10 个人的上行流量已经不小，频率翻倍只会让家庭宽带的房主率先崩溃。<b data-page-node-id="CuLbaFUtyzBg7lTPUl0dWU">在自己的带宽预算内，把最关键的信息按时送到</b>——频率的选取本质上是一场工程权衡，而不是技术炫技。</p>
+
+    <h2 data-page-node-id="Pku5oRAj7ACCwoyGrVZyVa">四、开火与子弹：从上报到广播</h2>
+    <p data-page-node-id="D4bCFY90tEO1EtH4e6Gvjf">一个具体例子：非房主玩家扣下扳机时，本地并不直接生成一颗"算数"的子弹，而是上报一个 <b data-page-node-id="N1CQHne4v0exEnXHxTqDqg">fire</b> 意图。房主收到后，在权威世界里生成子弹、赋予弹道，随后用 <b data-page-node-id="OGAy4YK9U45nDQd4w1po2z">blt</b> 消息广播给全场——包括开火者自己。开火者收到自己那颗子弹的 blt 时会跳过生成（防止本地预生成导致的双份子弹）。</p>
+    <p data-page-node-id="5C4DCpYh6GyuXouWldoqXX">为什么要绕这一圈？因为<b data-page-node-id="CgnhOkNIMpptfWIlrLw7IB">子弹是否命中必须由房主裁定</b>。如果每个客户端都自己算弹道，同一颗子弹在不同设备上会命中不同的目标。弹道由房主统一生成、统一推进、统一判定，全场看到的命中结果才严格一致。开火者本地那颗"预显示"的子弹只是视觉演出，它的账怎么平——正是下一篇文章的主题。</p>
+
+    <h2 data-page-node-id="AkrdQKk5x8Tzkj8otF9pSa">五、掉线判罚：规则简单粗暴</h2>
+    <p data-page-node-id="icL17svIwoj6HMMEJn0ZH4">P2P 对局里，断线不是"如果"而是"何时"——手机锁屏、地铁进隧道、家里路由器重启，都会随时掐断一条连接。所以掉线处理必须在设计之初就想清楚，而不是出事后再打补丁。《苍穹对决》的规则只有两条：</p>
+    <ul data-page-node-id="PisPYw39CUmBuwEKDMo1Hs">
+      <li data-page-node-id="GaJzbyNUwjJj5elwMsmH0N"><b data-page-node-id="JHFKrN5dkLU5lHb5QrjXq2">房主掉线</b>：世界没了裁判，比赛无法继续——全员立即弹窗判负，比赛结束。没有"等待房主重连"的复杂状态机，规则粗暴但毫不含糊。</li>
+      <li data-page-node-id="rqyDNd0P5bR6iCmCRhtbd3"><b data-page-node-id="zq6Vl4gB18JFkFUqlOD3FL">非房主掉线</b>：房主权威判定其死亡并广播 <b data-page-node-id="LEmk2RsswR246CcHXG0L3Z">peerGone</b>，剩余玩家继续打完。比分、回合、奖励照常结算。</li>
+    </ul>
+    <p data-page-node-id="JjeAtMKkKbG1Pd1EW3CoD9">为什么房主掉线不做重连？因为"房主的世界"就活在房主那台设备的内存里——他一关浏览器，这个世界的所有运行时状态（子弹、血量、回合进度）就消失了。要做断线重连，就得把这些状态序列化并迁移到另一台设备上，复杂度呈指数上升；而一个 5 局 3 胜的对局通常不过十几分钟，重开一局的成本远低于把重连机制做对的成本。<b data-page-node-id="uBdxxrB4qu9HvJqzbopzuL">把复杂度砍掉，把规则说清楚</b>——这同样是设计决策，而且是更难的那种。</p>
+
+    <h2 data-page-node-id="K1IUnXBLErU8CLDxaQ4bsG">六、代价与对策：房主也是普通家庭宽带</h2>
+    <p data-page-node-id="neP4CEGGGX898n8SaYdgMS">这套设计当然有代价：房主承担全部结算压力，房主的上行带宽决定全场体验的下限；房主自身的延迟不会因为"他是服务器"而消失。对策有三层：星型拓扑把房主的负担压到 O(n)；命中判定时<b data-page-node-id="mPacUET8OBG3GkBkwYEfaf">跳过过期上报</b>（延迟补偿，详见下一篇）；以及最关键的——<b data-page-node-id="Vbjtp4OH98Sc0xQwjVadDT">本地预判 + 权威回溯</b>，让每个玩家即使隔着几百毫秒的链路，手感依然跟单机一样。</p>
+    <p data-page-node-id="9FoxMXhoMrEPggiaHdRBUi">还有一条常被忽略的软性对策：<b data-page-node-id="wYyqRxrHBdCuFyZ4BOfUGz">让房主成为一个荣誉而不是负担</b>。创建房间的人天然是这局的组织者，掉线判负的规则让房主有动力选一个网络稳定的环境开局；而作为补偿，房主享受着全场最低的延迟（他到自己永远是 0ms）和最完整的战场信息。权责对等，是这套架构能被玩家自然接受的隐形前提。</p>
+    <div class="callout" data-page-node-id="2lpxSpLVXgEcoKCCMr5BJJ">星型拓扑解决了"谁说了算"，但没有解决"等结果太慢"。下一篇文章《本地预判 + 权威回溯：高延迟也能指哪打哪》，讲的就是这套手感的秘密。</div>
+  </div>
+  <div class="pager" data-page-node-id="ni2Opof70j0yd6SdNifzI2">
+    <a href="/articles/p2p/" class="prev" data-page-node-id="vMHc2qCvqeszofSrzXuWKH"><div class="dir" data-page-node-id="kLmHV2AUrnZcgEC3Oz2P3B">← 上一篇</div><div class="pt" data-page-node-id="9kMP0DU2StbOmqR0lh7wMc">零服务器联机：不花一分钱，怎么让十个人同屏狗斗？</div></a>
+    <a href="/articles/prediction/" class="next" data-page-node-id="o8OrG9fCQGoaSt1wnaTIpa"><div class="dir" data-page-node-id="9EyVbd8VI8oxLZOlUPYPkd">下一篇 →</div><div class="pt" data-page-node-id="WLqelskagmMv3jTsRxNi39">本地预判 + 权威回溯：高延迟也能指哪打哪</div></a>
+  </div>
+</div>
+<footer data-page-node-id="A9ABmbZciPQUyzKTIvnXsM"><b data-page-node-id="uEh7mf69GgiRzy8wGevKow">SKY DUEL</b> · 苍穹对决 — 纯前端 3D 空战网页游戏 · 技术专栏</footer>
+</body>
+</html>

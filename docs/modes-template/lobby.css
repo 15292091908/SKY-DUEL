@@ -1,0 +1,13 @@
+/* lobby.css —— 本模式的大厅皮肤（mode.js 在切到本模式时动态注入） */
+#menu[data-mode="yourmode"]{ --gm-accent:#7c3aed; --gm-accent-soft:#7c3aed22; --gm-accent-line:#7c3aed66; }
+#menu[data-mode="yourmode"] .gmPill.on{
+  color:#7c3aed;
+  border-color:var(--gm-accent-line);
+  box-shadow:0 8px 22px #7c3aed2e;
+}
+#menu[data-mode="yourmode"] .bigPill:hover{ border-color:var(--gm-accent-line); }
+#menu[data-mode="yourmode"] .zoomInfo{ color:#7c3aed; }
+#menu[data-mode="yourmode"] .menuGmBar::after{
+  content:""; position:absolute; left:50%; bottom:-7px; width:46px; height:3px; border-radius:2px;
+  transform:translateX(-50%); background:var(--gm-accent); opacity:.75;
+}

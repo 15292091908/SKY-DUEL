@@ -1,0 +1,8 @@
+{
+  "id": "yourmode",
+  "name": "你的玩法",
+  "order": 900,
+  "accent": "#7c3aed",
+  "lobbyCss": "lobby.css",
+  "defaultMap": "flat"
+}

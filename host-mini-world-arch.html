@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>苍穹对决 · 联机架构（房主小世界 v3）</title>
+<style>
+  :root {
+    --bg: #eef2f7;
+    --ink: #16232f;
+    --ink2: #5a6b7c;
+    --ink3: #8a97a5;
+    --line: rgba(22,35,47,.10);
+    --blue: #2563eb;
+    --cyan: #0ea5e9;
+    --green: #0f9d63;
+    --amber: #c2740b;
+    --red: #dc3b2f;
+    --violet: #6d5bd0;
+    --glass: rgba(255,255,255,.70);
+    --shadow: 0 6px 26px rgba(37,99,235,.09), 0 1px 4px rgba(22,35,47,.05);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: "Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:
+      radial-gradient(900px 420px at 12% -8%, rgba(14,165,233,.13), transparent 62%),
+      radial-gradient(820px 400px at 92% 4%, rgba(37,99,235,.10), transparent 58%),
+      var(--bg);
+    color: var(--ink);
+    padding: 22px clamp(12px,3vw,38px) 56px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1140px; margin: 0 auto; }
+
+  .top { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+  .logo {
+    width:44px; height:44px; border-radius:13px; flex:none;
+    background:linear-gradient(135deg,#2563eb,#0ea5e9);
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:20px; box-shadow:0 6px 18px rgba(37,99,235,.32);
+  }
+  .top h1 { font-size:19px; font-weight:800; letter-spacing:.2px; }
+  .top p { font-size:12.5px; color:var(--ink2); margin-top:2px; }
+  .ver {
+    margin-left:auto; display:flex; align-items:center; gap:8px;
+    background:var(--glass); border:1px solid rgba(255,255,255,.92);
+    -webkit-backdrop-filter:blur(12px) saturate(1.6); backdrop-filter:blur(12px) saturate(1.6);
+    border-radius:999px; padding:7px 15px; font-size:12.5px; font-weight:700; box-shadow:var(--shadow);
+  }
+  .ver i { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 0 3px rgba(15,157,99,.16); }
+
+  .card {
+    background:var(--glass); border:1px solid rgba(255,255,255,.92);
+    -webkit-backdrop-filter:blur(14px) saturate(1.7); backdrop-filter:blur(14px) saturate(1.7);
+    border-radius:16px; padding:15px 17px; box-shadow:var(--shadow);
+  }
+  .card h2 { font-size:13.5px; font-weight:800; display:flex; align-items:center; gap:8px; margin-bottom:11px; }
+  .card h2 .ic {
+    width:25px; height:25px; border-radius:8px; flex:none; font-size:12px; color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,#2563eb,#0ea5e9);
+  }
+  .ic.g { background:linear-gradient(135deg,#0f9d63,#14b8a6); }
+  .ic.a { background:linear-gradient(135deg,#f59e0b,#ea8312); }
+  .ic.r { background:linear-gradient(135deg,#ef6a4c,#dc3b2f); }
+  .ic.v { background:linear-gradient(135deg,#8b7bea,#6d5bd0); }
+
+  .stage {
+    background:var(--glass); border:1px solid rgba(255,255,255,.92);
+    -webkit-backdrop-filter:blur(14px) saturate(1.7); backdrop-filter:blur(14px) saturate(1.7);
+    border-radius:18px; padding:10px 12px 4px; box-shadow:var(--shadow); margin-bottom:14px;
+  }
+  .stage svg { display:block; width:100%; height:auto; }
+  .legend { display:flex; flex-wrap:wrap; gap:6px 16px; padding:6px 4px 10px; font-size:11.5px; color:var(--ink2); }
+  .legend span.sw { display:inline-block; width:14px; height:5px; border-radius:3px; margin-right:6px; vertical-align:2px; }
+
+  .grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
+  .grid .wide { grid-column:1 / -1; }
+  @media (max-width: 860px) { .grid { grid-template-columns:1fr; } }
+
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px dashed var(--line); vertical-align:top; line-height:1.55; }
+  th { font-size:11px; font-weight:800; color:var(--ink2); letter-spacing:.3px; background:rgba(255,255,255,.5); }
+  tr:last-child td { border-bottom:none; }
+  td b { font-weight:700; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size:11.5px; background:rgba(37,99,235,.07); color:#1b4fd8;
+    padding:1px 5px; border-radius:5px;
+  }
+  .muted { color:var(--ink2); }
+  .tag {
+    display:inline-block; font-size:10px; font-weight:700; padding:1px 7px;
+    border-radius:6px; margin-left:4px; vertical-align:1px; white-space:nowrap;
+  }
+  .tag.b { background:rgba(37,99,235,.10); color:#1b4fd8; }
+  .tag.g { background:rgba(15,157,99,.10); color:#0b7a4c; }
+  .tag.a { background:rgba(194,116,11,.12); color:#96600a; }
+  .tag.r { background:rgba(220,59,47,.10); color:#b93125; }
+  .tag.v { background:rgba(109,91,208,.12); color:#5a49bd; }
+
+  .flow { display:grid; grid-template-columns:110px 1fr 1fr; font-size:12px; }
+  .flow .h { font-size:11px; font-weight:800; color:var(--ink2); padding:6px 8px; border-bottom:1px solid var(--line); }
+  .flow .c { padding:8px; border-bottom:1px dashed var(--line); line-height:1.6; }
+  .flow .c.t { font-weight:700; color:var(--ink2); }
+  .flow .c.vis { background:rgba(220,59,47,.045); }
+  .flow .c.dmg { background:rgba(37,99,235,.045); }
+  @media (max-width: 860px) { .flow { grid-template-columns:1fr; } .flow .h { display:none; } }
+
+  ul { list-style:none; }
+  ul li { font-size:12.5px; line-height:1.65; padding:7px 0; border-bottom:1px dashed var(--line); display:flex; gap:9px; }
+  ul li:last-child { border-bottom:none; }
+  ul li .n {
+    flex:none; width:19px; height:19px; border-radius:6px; font-size:10.5px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; color:#fff;
+    background:linear-gradient(135deg,#2563eb,#0ea5e9); margin-top:1px;
+  }
+  ul li .n.g { background:linear-gradient(135deg,#0f9d63,#14b8a6); }
+  ul li .n.a { background:linear-gradient(135deg,#f59e0b,#ea8312); }
+  ul li .n.r { background:linear-gradient(135deg,#ef6a4c,#dc3b2f); }
+  ul li .n.v { background:linear-gradient(135deg,#8b7bea,#6d5bd0); }
+
+  .foot { text-align:center; font-size:11px; color:var(--ink3); margin-top:18px; line-height:1.8; }
+  @media (prefers-reduced-motion: reduce) { * { transition:none !important; animation:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="logo">✈</div>
+    <div>
+      <h1>苍穹对决 · 联机架构</h1>
+      <p>房主小世界 · 星型拓扑 · 双通道 · 客户端判定 + 房主校验</p>
+    </div>
+    <div class="ver"><i></i>架构 v3.11</div>
+  </div>
+
+  <div class="stage">
+    <svg viewBox="0 0 1100 330" role="img" aria-label="星型拓扑：所有玩家只与房主直连，两条数据通道">
+      <defs>
+        <linearGradient id="hostG" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#0ea5e9"/>
+        </linearGradient>
+      </defs>
+
+      <rect x="392" y="16" width="316" height="88" rx="16" fill="url(#hostG)" opacity=".10"/>
+      <rect x="404" y="28" width="292" height="64" rx="12" fill="#fff" stroke="rgba(37,99,235,.35)" stroke-width="1"/>
+      <text x="550" y="54" text-anchor="middle" font-size="14" font-weight="800" fill="#1b4fd8">房主 · Host Mini-World</text>
+      <text x="550" y="74" text-anchor="middle" font-size="11" fill="#5a6b7c">权威结算 / 快照 / 转发（唯一裁判）</text>
+
+      <g font-size="11.5" fill="#16232f">
+        <rect x="76" y="196" width="196" height="66" rx="12" fill="#fff" stroke="rgba(22,35,47,.14)" stroke-width="1"/>
+        <text x="174" y="220" text-anchor="middle" font-weight="700">玩家 A（加入方）</text>
+        <text x="174" y="240" text-anchor="middle" fill="#5a6b7c">位置上报 · 本地判定命中</text>
+
+        <rect x="452" y="196" width="196" height="66" rx="12" fill="#fff" stroke="rgba(22,35,47,.14)" stroke-width="1"/>
+        <text x="550" y="220" text-anchor="middle" font-weight="700">玩家 B（加入方）</text>
+        <text x="550" y="240" text-anchor="middle" fill="#5a6b7c">位置上报 · 本地判定命中</text>
+
+        <rect x="828" y="196" width="196" height="66" rx="12" fill="#fff" stroke="rgba(22,35,47,.14)" stroke-width="1"/>
+        <text x="926" y="220" text-anchor="middle" font-weight="700">玩家 C（加入方）</text>
+        <text x="926" y="240" text-anchor="middle" fill="#5a6b7c">位置上报 · 本地判定命中</text>
+      </g>
+
+      <path d="M550 92 L174 196" stroke="#0ea5e9" stroke-width="3" fill="none" opacity=".8"/>
+      <path d="M550 92 L550 196" stroke="#0ea5e9" stroke-width="3" fill="none" opacity=".8"/>
+      <path d="M550 92 L926 196" stroke="#0ea5e9" stroke-width="3" fill="none" opacity=".8"/>
+
+      <g font-size="10.5" font-weight="700">
+        <rect x="296" y="128" width="156" height="20" rx="10" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1"/>
+        <text x="374" y="142" text-anchor="middle" fill="#0369a1">'s' 无序 · 不可靠</text>
+        <rect x="486" y="150" width="128" height="20" rx="10" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1"/>
+        <text x="550" y="164" text-anchor="middle" fill="#0369a1">upd / sync · 20Hz</text>
+        <rect x="698" y="128" width="156" height="20" rx="10" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1"/>
+        <text x="776" y="142" text-anchor="middle" fill="#0369a1">丢了等下一个</text>
+
+        <rect x="292" y="96" width="196" height="20" rx="10" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+        <text x="390" y="110" text-anchor="middle" fill="#15803d">'e' 可靠 · 有序（默认参数）</text>
+        <rect x="612" y="96" width="196" height="20" rx="10" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+        <text x="710" y="110" text-anchor="middle" fill="#15803d">fire / hitRep / hit …</text>
+      </g>
+
+      <text x="550" y="298" text-anchor="middle" font-size="11.5" fill="#5a6b7c">
+        玩家之间没有直连：所有消息上行到房主，再由房主下发（3v3 / 5v5 同构）
+      </text>
+      <text x="550" y="318" text-anchor="middle" font-size="11" fill="#8a97a5">
+        视觉弹道走 'e' 广播重建；位姿快照走 's' 覆盖 —— 两条通道互相独立，没有跨通道顺序保证
+      </text>
+    </svg>
+    <div class="legend">
+      <div><span class="sw" style="background:#7dd3fc"></span>'s' 状态通道：upd / sync / voice，丢了等下一个</div>
+      <div><span class="sw" style="background:#86efac"></span>'e' 事件通道：控制与战斗事件，可靠有序（重传 = 延迟而非丢失）</div>
+      <div><span class="sw" style="background:linear-gradient(90deg,#2563eb,#0ea5e9)"></span>房主小世界：唯一权威</div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <div class="card wide">
+      <h2><span class="ic">⇄</span>两条通道：谁可靠、谁实时</h2>
+      <table>
+        <tr><th style="width:10%">通道</th><th style="width:28%">创建方式</th><th style="width:32%">承载</th><th>语义后果</th></tr>
+        <tr>
+          <td><b>s</b> <span class="tag b">状态</span></td>
+          <td><code>createDataChannel('s', {ordered:false, maxRetransmits:0})</code></td>
+          <td><code>upd</code>（上报位姿 20Hz）、<code>sync</code>（房主快照 20Hz）、<code>voice</code>（语音帧）</td>
+          <td>丢了就等下一个。位姿用 lerp 平滑，画面约滞后 1 RTT；语音有 80ms 重排窗，缺包跳过不阻塞。</td>
+        </tr>
+        <tr>
+          <td><b>e</b> <span class="tag g">事件</span></td>
+          <td><code>createDataChannel('e')</code>（默认参数）</td>
+          <td><code>hello / team / roster / fire / blt / fireRocket / rkt / hitRep / hit / hitReject / kill / kstat / died / crash / envDmg / round / rEnd / matchEnd / pickList / go / ping / pong / kick / modeMismatch</code></td>
+          <td>可靠有序：不会丢，但一个包丢了后面全排队等重传（队头阻塞 → 几十到几百 ms 的延迟尖峰）。</td>
+        </tr>
+      </table>
+      <p class="muted" style="font-size:11.5px;margin-top:8px;line-height:1.6">
+        子弹与命中全部走 <b>e</b>，所以「hitRep 丢包」在网络层不会发生；会失效的只有逻辑丢弃（回合已结束、目标已死、去重表命中）和 40m 位置校验拒绝。
+        反过来，位姿走 <b>s</b>，所以「开火快照」与「对方看到的机体位置」天然对不齐。
+      </p>
+    </div>
+
+    <div class="card wide">
+      <h2><span class="ic g">◎</span>一次命中：视觉链与伤害链</h2>
+      <div class="flow">
+        <div class="h">时刻</div><div class="h">开火者 A</div><div class="h">房主 / 其他端</div>
+
+        <div class="c t">① 出膛</div>
+        <div class="c vis"><code>fireGun</code> 生成本地子弹（<code>src='me'</code>），放枪口火光；随后广播 <code>fire{o,d,fid,s,dm,sl}</code></div>
+        <div class="c vis">房主用 <code>o/d/s</code> 重建一颗 <code>foeVis</code> 子弹，再广播 <code>blt</code>；各端按同样参数再建一颗纯视觉弹</div>
+
+        <div class="c t">② 判定</div>
+        <div class="c dmg">只有 <code>src==='me'</code> 的子弹做 <code>segSphere(prev→pos)</code> 扫掠；命中即 <code>active=false</code>，子弹当帧消失</div>
+        <div class="c dmg"><code>foeVis</code> 子弹<b>永不与单位碰撞</b>，只跟地形/建筑交互；它只是曳光</div>
+
+        <div class="c t">③ 本地反馈</div>
+        <div class="c vis">火花 + 命中音 + 准星命中标记 + 部位飘字（<code>命中驾驶舱 ×3</code>）—— 不等网络，但<b>不改血量</b></div>
+        <div class="c vis">没有任何反应（连火花都不放）</div>
+
+        <div class="c t">④ 上报</div>
+        <div class="c dmg"><code>hitRep{fid, id, part, p, splash?, dmg?}</code> 发给房主</div>
+        <div class="c dmg">房主：<code>fid/id</code> 非空 → <code>hitSettled</code> 去重（键 <code>rid:fid:id</code>，5s）→ 目标存活 → <code>|p − tgtPos| ≤ 40m</code></div>
+
+        <div class="c t">⑤ 结算</div>
+        <div class="c">等广播（本地不扣血、不判死）</div>
+        <div class="c dmg">房主：伤害<b>不采信上报值</b> —— 直击 = 基础伤害 × 自己按弱点表复核的倍率；溅射 = 上报值夹紧 2~300。扣血 → hp≤0 → <code>peerDie</code> → 记台账 → 广播 <code>kill</code></div>
+
+        <div class="c t">⑥ 广播</div>
+        <div class="c">收到 <code>hit{s,v,part,pos,dmg,hp,fatal,fid}</code></div>
+        <div class="c">房主 <code>netBroadcast</code> 给所有人</div>
+
+        <div class="c t">⑦ 呈现</div>
+        <div class="c vis">射手分支：不再放特效（本地已放过），只把目标血量改成权威值</div>
+        <div class="c vis">被打者：受击火花 + 屏幕红闪 + <code>me.hp = d.hp</code>；旁观者：火花/爆炸 + 目标血条。所有端同时 <code>killBulletFx(s, fid)</code> 移除那发弹道</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="ic v">⚖</span>权威边界：谁说了算</h2>
+      <table>
+        <tr><th style="width:40%">事项</th><th style="width:20%">判定方</th><th>依据</th></tr>
+        <tr><td>这一发打没打中</td><td><b>开火者</b></td><td>本地 <code>segSphere</code> 扫掠（用自己看到的画面）</td></tr>
+        <tr><td>伤害是多少</td><td><b>房主</b></td><td>基础伤害 × 房主按目标弱点表复核的倍率</td></tr>
+        <tr><td>命中位置是否合理</td><td><b>房主</b></td><td><code>HIT_TOLERANCE = 40m</code>，超出回 <code>hitReject</code></td></tr>
+        <tr><td>血量 / 死亡</td><td><b>房主</b></td><td><code>applyPeerDamage</code> → <code>peerDie</code></td></tr>
+        <tr><td>谁杀了谁</td><td><b>房主</b></td><td><code>lastDmgFrom</code> + 击杀台账，3s 一次 <code>kstat</code> 校正</td></tr>
+        <tr><td>回合 / 比分 / 终局</td><td><b>房主</b></td><td><code>rEnd</code> / <code>matchEnd</code>；非房主用 <code>s0/s1</code> 按阵营换算</td></tr>
+        <tr><td>撞地 / 出海</td><td><b>房主</b></td><td><code>upd</code> 的 y 值 / 弹道位置</td></tr>
+        <tr><td>弹道长什么样</td><td><b>各端自己</b></td><td><code>fire/blt</code> 参数重建，纯视觉，不参与判定</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2><span class="ic a">✎</span>三种玩法的开火链路</h2>
+      <table>
+        <tr><th style="width:32%">玩法 / 武器</th><th style="width:32%">本地实体</th><th>网络</th></tr>
+        <tr><td>空战 · 机炮 / 高爆</td><td><code>fireGun</code> → bullets</td><td><code>fire{o,d,fid,s,dm,sl}</code></td></tr>
+        <tr><td>空战 · 机载火箭</td><td><code>firePlaneRocket</code> → rockets</td><td><code>fireRocket</code> → <code>rkt</code></td></tr>
+        <tr><td>防空车 · 飞机机炮</td><td>同上</td><td>同上</td></tr>
+        <tr><td>防空车 · 车载机枪</td><td><code>fireGunAAGun</code>（520 m/s）</td><td><code>fire{o,d,fid,s,dm,sl}</code></td></tr>
+        <tr><td>防空车 · 火箭炮</td><td><code>fireRocket</code></td><td><code>fireRocket</code> → <code>rkt</code></td></tr>
+        <tr><td>直升机 · 机枪</td><td><code>fireGun</code>（<code>speed+520</code>）</td><td><code>fire</code> <span class="tag g">v3.11 补齐 s/dm/sl</span></td></tr>
+        <tr><td>直升机 · 航空炸弹</td><td><code>spawnRocketFx</code> + 炸弹模型</td><td><code>fireRocket/rkt</code> <span class="tag g">v3.11 新增</span> <code>bomb:1 + v/g/br/lr/life</code></td></tr>
+      </table>
+      <p class="muted" style="font-size:11.5px;margin-top:8px;line-height:1.6">
+        炸弹的初速是「投弹瞬间的载机速度 − 弹射速度」，所以广播必须带 <code>v</code>；只发方向会让接收端按 260 m/s 直线飞，弹道完全不同。
+        接收端用模式包钩子 <code>spawnRemoteBomb</code> 重建炸弹模型与物理，结算仍由投弹者的 <code>hitRep</code> 驱动。
+      </p>
+    </div>
+
+    <div class="card">
+      <h2><span class="ic r">⚠</span>掉线、延迟门槛与模式一致性</h2>
+      <ul>
+        <li><span class="n">1</span><div><b>延迟门槛</b>：连接建立后立刻采样 3 次 RTT（取最小值，首包受 ICE 影响偏大），<code>≥ 80ms</code> 直接 <code>kick</code> 并延迟重载页面。<b>通过检测才算「就绪」</b>，人齐判定用的是就绪人数 —— 所以不合格的玩家会在进入选图/选阵营<b>之前</b>被剔除，不会把房主从选人界面打回大厅；主动踢出也不缩编（3v3 不会悄悄变成 2v2）。</div></li>
+        <li><span class="n r">2</span><div><b>掉线</b>：<code>onClose</code> → 删除连接与 roster 条目 → 该玩家按阵亡结算；回合内剩余玩家继续，房主推进 <code>rEnd</code>。</div></li>
+        <li><span class="n a">3</span><div><b>模式一致性（v3.11）</b>：邀请码里带房主的 <code>gm</code>，加入方在生成应答码前就比对；不一致直接拒绝，<b>连 PeerConnection 都不建</b>。连接后 <code>hello</code> 再带一次 <code>gm</code> 兜底（兼容旧版客户端），不一致由房主踢出并提示双方模式名。</div></li>
+        <li><span class="n v">4</span><div><b>回合推进</b>：<code>round</code> 走可靠通道正常先到；丢了由 <code>sync</code> 的 <code>rn</code> 超前兜底。<code>rn</code> 落后的旧快照整段跳过，防局号回退与二次重置。</div></li>
+        <li><span class="n g">5</span><div><b>回菜单是就地软重置（v3.11.2）</b>：返回 / 被踢 / 掉线 / 超时都不再 <code>location.reload()</code>，而是按「停输入 → 关连接 → 清实体 → 清状态 → 清 UI → 重建菜单 3D」复位。连接关闭走 <code>Net.close()</code>（先 DataChannel 后 PeerConnection），对端通过 <code>onClose</code> 各自软重置。</div></li>
+      </ul>
+    </div>
+
+    <div class="card wide">
+      <h2><span class="ic">◎</span>已知边界（设计取舍，不是 bug）</h2>
+      <ul>
+        <li><span class="n r">1</span><div><b>视觉弹道不判伤</b>：<code>foeVis</code> 子弹不与飞机/防空车碰撞。命中特效出现前，它已经从目标身上穿过去了 —— 移除时机是 <code>hit</code> 到达的那一帧（<code>killBulletFx</code> 按「射手 + fid」精确匹配）。</div></li>
+        <li><span class="n a">2</span><div><b>跨通道没有顺序保证</b>：<code>hit</code>（e 通道）可能先于一条更早生成的 <code>sync</code>（s 通道）到达，旧快照会把血量短暂覆盖回去（约 50~150ms），随后被下一个快照纠正。</div></li>
+        <li><span class="n">3</span><div><b>特效位置 ≠ 本地弹道位置</b>：命中特效放在开火者上报的命中点 <code>p</code>，接收端的子弹按自己的积分位置渲染。延迟 100ms、弹速 600 m/s 就是 60m 的视觉差。</div></li>
+        <li><span class="n v">4</span><div><b>40m 是防作弊阈值</b>：按「最大 170 m/s × 80ms + 插值滞后」推出来的容差，用来挡错目标/瞬移/改包，不是精确几何校验。</div></li>
+        <li><span class="n g">5</span><div><b>炸弹 AOE 逐目标上报</b>：一次爆炸命中 N 个目标就发 N 条 <code>hitRep</code>，房主按 <code>rid:fid:id</code> 分别去重结算，互不压制。</div></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="foot">
+    苍穹对决 Sky Duel · 架构文档随代码更新（v3.11）<br>
+    本页纯静态说明，无外部资源、不加载游戏模块
+  </div>
+
+</div>
+<script>
+  // ?static：静态模式（截图 / iframe 嵌入时关闭阴影与动效，避免首帧闪烁）
+  if (/[?&]static\b/.test(location.search)) {
+    document.documentElement.style.setProperty('--shadow', 'none');
+    document.body.style.background = '#eef2f7';
+  }
+</script>
+</body>
+</html>

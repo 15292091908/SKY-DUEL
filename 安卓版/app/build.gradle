@@ -1,0 +1,36 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.skyduel.game'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'com.skyduel.game'
+        minSdk 24
+        targetSdk 36
+        versionCode 87
+        versionName '1.6.48'   // v3.19.0 火箭推进三状态：从零点火加速 → 维持最大速度 → 燃料耗尽后减速下坠
+        // 真实二次阻力修正：RPG-7 弹体 c=4.7e-4/m（旧值 1.4e-3 是弹径算错）；重力真实 9.8 + 实时物理 500m 助推段
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+// WebView 宿主：游戏本体为 assets/web/ 下的网页版快照（js/ + vendor/three.module.min.js）
+// androidx.webkit 提供 WebViewAssetLoader —— 以 https 域名提供本地资源，
+// 使页面处于安全上下文（WebRTC DataChannel / 剪贴板 / getUserMedia 必需）
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+}

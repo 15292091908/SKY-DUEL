@@ -1,0 +1,14 @@
+/* js/modes/heli/lobby.css —— 本模式的大厅皮肤（切到本模式时由 mode.js 动态注入）
+   只作用于 #menu[data-mode="heli"]，不会污染其它模式。 */
+#menu[data-mode="heli"]{ --gm-accent:#059669; --gm-accent-soft:#05966922; --gm-accent-line:#05966966; }
+#menu[data-mode="heli"] .gmPill.on{
+  color:#059669;
+  border-color:var(--gm-accent-line);
+  box-shadow:0 8px 22px #0596692e;
+}
+#menu[data-mode="heli"] .bigPill:hover{ border-color:var(--gm-accent-line); }
+#menu[data-mode="heli"] .zoomInfo{ color:#059669; }
+#menu[data-mode="heli"] .menuGmBar::after{
+  content:""; position:absolute; left:50%; bottom:-7px; width:46px; height:3px; border-radius:2px;
+  transform:translateX(-50%); background:var(--gm-accent); opacity:.75;
+}

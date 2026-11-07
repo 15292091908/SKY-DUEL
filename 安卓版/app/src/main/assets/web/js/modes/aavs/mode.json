@@ -1,0 +1,8 @@
+{
+  "id": "aavs",
+  "name": "防空车突袭",
+  "order": 20,
+  "accent": "#d97706",
+  "lobbyCss": "lobby.css",
+  "defaultMap": "base"
+}

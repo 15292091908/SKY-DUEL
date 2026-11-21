@@ -1,0 +1,7 @@
+# 苍穹对决 Sky Duel - robots.txt
+# 落地页与技术专栏对搜索引擎开放；/play/ 为游戏页（noindex，允许爬取以便发现更新）
+
+User-agent: *
+Allow: /
+
+Sitemap: https://game.4365754.xyz/sitemap.xml

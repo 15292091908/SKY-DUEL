@@ -1,0 +1,60 @@
+{
+  "generatedAt": "2026-11-21T11:25:03.316Z",
+  "modes": [
+    {
+      "dir": "air",
+      "id": "dogfight",
+      "name": "空战对决",
+      "order": 10,
+      "accent": "#2563eb",
+      "lobbyCss": "lobby.css",
+      "defaultMap": "island",
+      "hasNet": true,
+      "hasMaps": true
+    },
+    {
+      "dir": "aavs",
+      "id": "aavs",
+      "name": "防空车突袭",
+      "order": 20,
+      "accent": "#d97706",
+      "lobbyCss": "lobby.css",
+      "defaultMap": "base",
+      "hasNet": true,
+      "hasMaps": true
+    },
+    {
+      "dir": "heli",
+      "id": "heli",
+      "name": "直升机突袭",
+      "order": 30,
+      "accent": "#059669",
+      "lobbyCss": "lobby.css",
+      "defaultMap": "base",
+      "hasNet": true,
+      "hasMaps": true
+    },
+    {
+      "dir": "heli2",
+      "id": "heli2",
+      "name": "直升机对决",
+      "order": 40,
+      "accent": "#0891b2",
+      "lobbyCss": "lobby.css",
+      "defaultMap": "oilrig",
+      "hasNet": true,
+      "hasMaps": true
+    },
+    {
+      "dir": "tank",
+      "id": "tank",
+      "name": "坦克对决",
+      "order": 50,
+      "accent": "#a16207",
+      "lobbyCss": "lobby.css",
+      "defaultMap": "farm",
+      "hasNet": true,
+      "hasMaps": true
+    }
+  ]
+}

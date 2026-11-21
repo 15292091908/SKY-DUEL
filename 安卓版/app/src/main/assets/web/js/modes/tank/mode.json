@@ -1,0 +1,8 @@
+{
+  "id": "tank",
+  "name": "坦克对决",
+  "order": 50,
+  "accent": "#a16207",
+  "lobbyCss": "lobby.css",
+  "defaultMap": "farm"
+}

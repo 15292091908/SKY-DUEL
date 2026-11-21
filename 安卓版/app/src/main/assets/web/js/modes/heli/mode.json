@@ -1,0 +1,8 @@
+{
+  "id": "heli",
+  "name": "直升机突袭",
+  "order": 30,
+  "accent": "#059669",
+  "lobbyCss": "lobby.css",
+  "defaultMap": "base"
+}

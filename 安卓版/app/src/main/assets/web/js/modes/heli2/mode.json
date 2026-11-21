@@ -1,0 +1,8 @@
+{
+  "id": "heli2",
+  "name": "直升机对决",
+  "order": 40,
+  "accent": "#0891b2",
+  "lobbyCss": "lobby.css",
+  "defaultMap": "oilrig"
+}

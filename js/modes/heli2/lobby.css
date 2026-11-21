@@ -1,0 +1,14 @@
+/* js/modes/heli2/lobby.css —— 本模式的大厅皮肤（切到本模式时由 mode.js 动态注入）
+   只作用于 #menu[data-mode="heli2"]，不会污染其它模式。 */
+#menu[data-mode="heli2"]{ --gm-accent:#0891b2; --gm-accent-soft:#0891b222; --gm-accent-line:#0891b266; }
+#menu[data-mode="heli2"] .gmPill.on{
+  color:#0891b2;
+  border-color:var(--gm-accent-line);
+  box-shadow:0 8px 22px #0891b22e;
+}
+#menu[data-mode="heli2"] .bigPill:hover{ border-color:var(--gm-accent-line); }
+#menu[data-mode="heli2"] .zoomInfo{ color:#0891b2; }
+#menu[data-mode="heli2"] .menuGmBar::after{
+  content:""; position:absolute; left:50%; bottom:-7px; width:46px; height:3px; border-radius:2px;
+  transform:translateX(-50%); background:var(--gm-accent); opacity:.75;
+}

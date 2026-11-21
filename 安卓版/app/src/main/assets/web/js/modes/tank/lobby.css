@@ -1,0 +1,14 @@
+/* js/modes/tank/lobby.css —— 本模式的大厅皮肤（麦田金 / 泥土棕）
+   只作用于 #menu[data-mode="tank"]，不会污染其它模式。 */
+#menu[data-mode="tank"]{ --gm-accent:#a16207; --gm-accent-soft:#a1620722; --gm-accent-line:#a1620766; }
+#menu[data-mode="tank"] .gmPill.on{
+  color:#a16207;
+  border-color:var(--gm-accent-line);
+  box-shadow:0 8px 22px #a162072e;
+}
+#menu[data-mode="tank"] .bigPill:hover{ border-color:var(--gm-accent-line); }
+#menu[data-mode="tank"] .zoomInfo{ color:#a16207; }
+#menu[data-mode="tank"] .menuGmBar::after{
+  content:""; position:absolute; left:50%; bottom:-7px; width:46px; height:3px; border-radius:2px;
+  transform:translateX(-50%); background:var(--gm-accent); opacity:.75;
+}

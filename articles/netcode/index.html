@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>弱网生存手册：丢包、抖动与那道 150ms 门槛 · 苍穹对决技术专栏</title>
+<meta name="description" content="抖动比延迟更致命：20Hz 快照与指数平滑、状态/事件双通道、fid 与 eid 幂等去重、掉线三层判定、开局 150ms 延迟门槛的来由。">
+<meta name="keywords" content="弱网优化,丢包,抖动,网络同步,幂等,掉线判定,延迟门槛,苍穹对决,Sky Duel">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#eef6fd">
+<meta property="og:type" content="article">
+<meta property="og:title" content="弱网生存手册：丢包、抖动与那道 150ms 门槛">
+<meta property="og:description" content="当包丢了、抖动上来了：快照、双通道、幂等与掉线判罚怎么兜住一局对局。">
+<meta property="og:locale" content="zh_CN">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="canonical" href="https://game.4365754.xyz/articles/netcode/">
+<meta property="og:url" content="https://game.4365754.xyz/articles/netcode/">
+<meta property="og:image" content="https://game.4365754.xyz/favicon.svg">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "苍穹对决", "item": "https://game.4365754.xyz/" },
+        { "@type": "ListItem", "position": 2, "name": "技术专栏", "item": "https://game.4365754.xyz/#tech" },
+        { "@type": "ListItem", "position": 3, "name": "弱网生存手册" }
+      ]
+    },
+    {
+      "@type": "BlogPosting",
+      "@id": "https://game.4365754.xyz/articles/netcode/#article",
+      "headline": "弱网生存手册：丢包、抖动与那道 150ms 门槛",
+      "description": "抖动比延迟更致命：20Hz 快照与指数平滑、状态/事件双通道、fid 与 eid 幂等去重、掉线三层判定、开局 150ms 延迟门槛的来由。",
+      "inLanguage": "zh-CN",
+      "datePublished": "2026-11-14",
+      "dateModified": "2026-11-14",
+      "author": { "@type": "Organization", "name": "Sky Duel", "url": "https://game.4365754.xyz/" },
+      "publisher": { "@type": "Organization", "name": "Sky Duel", "url": "https://game.4365754.xyz/",
+        "logo": { "@type": "ImageObject", "url": "https://game.4365754.xyz/favicon.svg" } },
+      "mainEntityOfPage": "https://game.4365754.xyz/articles/netcode/",
+      "image": "https://game.4365754.xyz/favicon.svg",
+      "articleSection": "网络韧性",
+      "isPartOf": { "@id": "https://game.4365754.xyz/#website" },
+      "about": { "@type": "VideoGame", "name": "苍穹对决", "alternateName": "Sky Duel", "url": "https://game.4365754.xyz/play/" }
+    }
+  ]
+}
+</script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--accent:#2563eb;--sky:#38bdf8;--text:#123a75;--body:#2e4c6e;--muted:#64748b;
+    --border:rgba(37,99,235,.12);--shadow:0 14px 36px rgba(0,0,0,.08)}
+  html{scroll-behavior:smooth}
+  body{background:#eef6fd;color:var(--text);font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(circle at 85% 6%,rgba(56,189,248,.14),transparent 24rem),
+      radial-gradient(circle at 8% 30%,rgba(37,99,235,.08),transparent 22rem)}
+  .topbar{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;
+    padding:13px 22px;background:rgba(238,246,253,.82);backdrop-filter:blur(14px) saturate(1.8);
+    border-bottom:1px solid var(--border)}
+  .back{display:inline-flex;align-items:center;gap:7px;text-decoration:none;font-size:13.5px;font-weight:bold;
+    color:#1d4ed8;background:rgba(255,255,255,.75);border:1px solid var(--border);border-radius:999px;
+    padding:8px 20px;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s}
+  .back:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(37,99,235,.22)}
+  .brand{font-weight:900;font-style:italic;letter-spacing:2px;color:#1d4ed8;font-size:15px;text-decoration:none}
+  .wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:58px 20px 60px}
+  .kicker{font-size:13px;font-style:italic;font-weight:900;color:#7cc4f5;letter-spacing:4px}
+  h1{font-size:clamp(28px,4vw,42px);font-weight:900;font-style:italic;letter-spacing:1px;line-height:1.35;margin:12px 0 12px;
+    background:linear-gradient(120deg,#123a75,#2563eb 60%,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .meta{font-size:13px;color:var(--muted);letter-spacing:1px;padding-bottom:22px;
+    border-bottom:1px solid var(--border);margin-bottom:34px}
+  .content h2{font-size:21px;font-weight:900;color:var(--text);margin:40px 0 14px;letter-spacing:1px;
+    padding-left:14px;border-left:4px solid var(--accent)}
+  .content p{font-size:16px;line-height:2.1;color:var(--body);margin:0 0 20px}
+  .content b{color:var(--accent)}
+  .content ul{margin:0 0 22px;padding-left:26px}
+  .content li{font-size:15.5px;line-height:2;color:var(--body);margin-bottom:10px}
+  .content li b{color:var(--accent)}
+  .callout{background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:16px;
+    padding:18px 22px;margin:0 0 22px;font-size:15px;line-height:2;color:var(--body)}
+  .pager{display:flex;justify-content:space-between;gap:14px;margin-top:64px;padding-top:28px;
+    border-top:1px solid var(--border);flex-wrap:wrap}
+  .pager a{flex:1;min-width:220px;text-decoration:none;background:rgba(255,255,255,.75);border:1px solid var(--border);
+    border-radius:16px;padding:16px 20px;box-shadow:var(--shadow);transition:transform .25s,box-shadow .25s}
+  .pager a:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(37,99,235,.2)}
+  .pager .dir{font-size:12px;color:var(--muted);letter-spacing:2px}
+  .pager .pt{font-weight:900;color:#1d4ed8;font-size:15px;margin-top:4px}
+  footer{position:relative;z-index:1;text-align:center;padding:26px 20px 42px;color:#6b87a8;font-size:13px}
+  footer b{font-style:italic;color:#1d4ed8}
+  @media (max-width:640px){.pager .next{display:none}.pager a{flex:none;width:100%}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="back" href="/">← 返回首页</a>
+  <a class="brand" href="/#tech">SKY DUEL · 技术专栏</a>
+</div>
+<div class="wrap">
+  <div class="kicker">UNDER THE HOOD · 05</div>
+  <h1>弱网生存手册：丢包、抖动与那道 150ms 门槛</h1>
+  <div class="meta">《苍穹对决》技术专栏 · 网络韧性篇 · 约 1800 字 · 阅读 5 分钟</div>
+  <div class="content">
+    <p>前四篇讲的是理想链路：连得上、有人裁、判得准。现实是——家里的 Wi-Fi 会抖，地铁会进隧道，室友会开始下电影。这篇讲当网络开始不听话时，这套系统靠什么不崩。</p>
+
+    <h2>一、延迟不可怕，抖动才可怕</h2>
+    <p>稳定 120ms 的延迟，玩家十分钟就适应了：提前量多拉一点，肌肉记忆会自动校准。真正毁体验的是<b>抖动</b>——这一包 40ms、下一包 300ms。目标位置一会儿超前一会儿滞后，你永远算不准该提前多少。</p>
+    <p>所以整套网络层的第一个目标不是"把平均延迟压到最低"，而是<b>把抖动摊平</b>：宁可让所有人统一晚一点点，也不要让画面忽快忽慢。</p>
+
+    <h2>二、远端单位：指数平滑跟随</h2>
+    <p>房主每秒 20 次广播所有单位的位置与朝向。客户端收到后不硬切，而是把远端飞机<b>平滑地追</b>向快照目标：位置用 lerp、朝向用 slerp，系数取 1 − e<sup>−12·dt</sup>——时间常数约 80ms。</p>
+    <p>这个系数是调出来的：太大，丢一包就"瞬移"；太小，高机动目标会像在水里游。指数平滑的好处是<b>自适应帧率</b>——不管你是 144Hz 还是 30Hz，收敛速度都一样。代价是远端目标总比真实位置晚一点点，这部分误差由本地预判和延迟补偿消化。</p>
+
+    <h2>三、两条通道：状态可以丢，事件不能丢</h2>
+    <ul>
+      <li><b>state 通道</b>：20Hz、不可靠、不排序。丢一帧无所谓，50ms 后就有新的，<b>最新状态永远比完整历史值钱</b>。</li>
+      <li><b>event 通道</b>：可靠、有序。开火、命中、死亡、换弹、回合切换走这里，一条都不能少，顺序也不能乱。</li>
+    </ul>
+    <p>分通道的意义在于隔离故障：状态洪水不会堵住关键事件，关键事件的重传也不会拖慢状态刷新。如果只有一条可靠通道，一次丢包重传会卡住后面所有状态，画面直接"倒放"。</p>
+
+    <h2>四、幂等：同一条消息只算一次</h2>
+    <p>重传、房主转发、断线重连，都可能让同一条消息到达两次。所以每条命中都带 <b>fid</b>，房主用 hitSettled 表去重；自定义事件带 <b>eid</b>，收到过的直接丢。死亡走唯一的 <b>peerDie()</b> 出口，重复调用不会重复扣分。</p>
+    <p><b>幂等不是优化，是正确性的前提。</b>没有它，一次网络抖动就能让对手掉两次血，或者让比分加两分——这种 bug 极难复现，也极难解释。</p>
+
+    <h2>五、掉线的三层判定</h2>
+    <p>"掉线"在代码里不是一件事，而是三条独立的路径：</p>
+    <ul>
+      <li><b>探针超时</b>：定期 ping，连续无响应即判离线；</li>
+      <li><b>连接关闭</b>：DataChannel close / ICE 断开，立即触发；</li>
+      <li><b>房主离线</b>：整个小世界消失，比赛结束。</li>
+    </ul>
+    <p>判罚规则也很干脆：某队全员掉线 → 该队判负；<b>房主中途掉线</b> → 比赛提前结束、判房主方负；<b>结算之后</b>房主才掉线 → 战绩原样保留，只禁用"再来一局"。最后这条是后来补的：看战绩看到一半被踢回大厅，比输掉还让人恼火。</p>
+
+    <h2>六、150ms 的门槛：宁可不让你进</h2>
+    <p>开局前每个加入者都要过延迟门槛：3 次采样<b>取最小值</b>（首包受 ICE 建立影响偏大，最小值最接近真实 RTT）。如果最小值仍然 ≥ <b>150ms</b>，会再给一轮重采机会；<b>两轮都不达标</b>才踢出对局。</p>
+    <p>看起来苛刻，但这其实是对局公平性的下限：一个人的 300ms 抖动，会让另外五个人一起看到"幽灵弹"和"瞬移"。而房主不受此限——他是权威，他的延迟只影响自己看到的世界。<b>权责对等</b>，是这套规则能被接受的前提。</p>
+
+    <h2>七、弱网下的正确姿势</h2>
+    <ul>
+      <li>能插网线就插网线；Wi-Fi 优先 5GHz，别隔着两堵墙打。</li>
+      <li>关掉后台的网盘同步、系统更新、视频下载——它们抢的是上行，而你的上行就是全场的下限。</li>
+      <li>房间码连不上时，手动「邀请码 / 应答码」走的是同一条 P2P 通道，不会更慢，只是多两步复制粘贴。</li>
+      <li>手机端注意省电模式：部分系统会限制后台网络，表现为"每隔几秒卡一下"。</li>
+    </ul>
+
+    <h2>结语：让延迟隐形</h2>
+    <p>这一整套东西的目标可以总结成一句话：<b>操作反馈零延迟、权威结果永远正确、两者短暂的不一致会在几百毫秒内静默修复。</b>玩家不需要知道 20Hz、指数平滑或者 fid 去重——他只需要觉得这游戏跟手。</p>
+    <p>而"跟手"从来不是某个单点技术，是弹道、判定、快照、预判、判罚五层叠出来的结果。任何一层偷懒，玩家都会在某一局里明确地感觉到"不对劲"。</p>
+
+    <div class="callout">五篇连读就是完整的联机拼图：WebRTC 给管道，房主小世界给裁判，预判与回溯给手感，弹道判定给规则，弱网处理给韧性。全部逻辑跑在你的浏览器里——这就是无服务器联机的完全体。</div>
+  </div>
+  <div class="pager">
+    <a href="/articles/ballistics/" class="prev"><div class="dir">← 上一篇</div><div class="pt">一颗子弹的一生：从枪口到房主的一纸裁决</div></a>
+    <a href="/" class="next"><div class="dir">返回 →</div><div class="pt">苍穹对决 · 首页</div></a>
+  </div>
+</div>
+<footer><b>SKY DUEL</b> · 苍穹对决 — 纯前端 3D 空战网页游戏 · 技术专栏</footer>
+</body>
+</html>

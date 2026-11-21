@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>一颗子弹的一生：弹道、命中判定与房主裁决 · 苍穹对决技术专栏</title>
+<meta name="description" content="从 880 m/s 的枪口到房主的裁决：真实弹道与空气阻力、四个判定球、部位装甲与结构失效（驾驶舱/发动机/机翼/弹药箱）、350/400ms 新鲜度检查、dmgReject 回溯，以及坦克的动能穿深与殉爆。">
+<meta name="keywords" content="弹道模拟,命中判定,客户端预判,房主权威,空气阻力,跳弹,穿甲弹,苍穹对决,Sky Duel">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#eef6fd">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一颗子弹的一生：弹道、命中判定与房主裁决">
+<meta property="og:description" content="一颗子弹从出膛到结算要过几道手：弹道、判定球、新鲜度检查与权威回溯。">
+<meta property="og:locale" content="zh_CN">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="canonical" href="https://game.4365754.xyz/articles/ballistics/">
+<meta property="og:url" content="https://game.4365754.xyz/articles/ballistics/">
+<meta property="og:image" content="https://game.4365754.xyz/favicon.svg">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "苍穹对决", "item": "https://game.4365754.xyz/" },
+        { "@type": "ListItem", "position": 2, "name": "技术专栏", "item": "https://game.4365754.xyz/#tech" },
+        { "@type": "ListItem", "position": 3, "name": "一颗子弹的一生" }
+      ]
+    },
+    {
+      "@type": "BlogPosting",
+      "@id": "https://game.4365754.xyz/articles/ballistics/#article",
+      "headline": "一颗子弹的一生：弹道、命中判定与房主裁决",
+      "description": "从 880 m/s 的枪口到房主的裁决：真实弹道与空气阻力、四个判定球、部位装甲与结构失效（驾驶舱/发动机/机翼/弹药箱）、350/400ms 新鲜度检查、dmgReject 回溯，以及坦克的动能穿深与殉爆。",
+      "inLanguage": "zh-CN",
+      "datePublished": "2026-11-14",
+      "dateModified": "2026-11-14",
+      "author": { "@type": "Organization", "name": "Sky Duel", "url": "https://game.4365754.xyz/" },
+      "publisher": { "@type": "Organization", "name": "Sky Duel", "url": "https://game.4365754.xyz/",
+        "logo": { "@type": "ImageObject", "url": "https://game.4365754.xyz/favicon.svg" } },
+      "mainEntityOfPage": "https://game.4365754.xyz/articles/ballistics/",
+      "image": "https://game.4365754.xyz/favicon.svg",
+      "articleSection": "命中判定",
+      "isPartOf": { "@id": "https://game.4365754.xyz/#website" },
+      "about": { "@type": "VideoGame", "name": "苍穹对决", "alternateName": "Sky Duel", "url": "https://game.4365754.xyz/play/" }
+    }
+  ]
+}
+</script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--accent:#2563eb;--sky:#38bdf8;--text:#123a75;--body:#2e4c6e;--muted:#64748b;
+    --border:rgba(37,99,235,.12);--shadow:0 14px 36px rgba(0,0,0,.08)}
+  html{scroll-behavior:smooth}
+  body{background:#eef6fd;color:var(--text);font-family:'Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;
+    -webkit-font-smoothing:antialiased}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(circle at 85% 6%,rgba(56,189,248,.14),transparent 24rem),
+      radial-gradient(circle at 8% 30%,rgba(37,99,235,.08),transparent 22rem)}
+  .topbar{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;
+    padding:13px 22px;background:rgba(238,246,253,.82);backdrop-filter:blur(14px) saturate(1.8);
+    border-bottom:1px solid var(--border)}
+  .back{display:inline-flex;align-items:center;gap:7px;text-decoration:none;font-size:13.5px;font-weight:bold;
+    color:#1d4ed8;background:rgba(255,255,255,.75);border:1px solid var(--border);border-radius:999px;
+    padding:8px 20px;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s}
+  .back:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(37,99,235,.22)}
+  .brand{font-weight:900;font-style:italic;letter-spacing:2px;color:#1d4ed8;font-size:15px;text-decoration:none}
+  .wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:58px 20px 60px}
+  .kicker{font-size:13px;font-style:italic;font-weight:900;color:#7cc4f5;letter-spacing:4px}
+  h1{font-size:clamp(28px,4vw,42px);font-weight:900;font-style:italic;letter-spacing:1px;line-height:1.35;margin:12px 0 12px;
+    background:linear-gradient(120deg,#123a75,#2563eb 60%,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .meta{font-size:13px;color:var(--muted);letter-spacing:1px;padding-bottom:22px;
+    border-bottom:1px solid var(--border);margin-bottom:34px}
+  .content h2{font-size:21px;font-weight:900;color:var(--text);margin:40px 0 14px;letter-spacing:1px;
+    padding-left:14px;border-left:4px solid var(--accent)}
+  .content p{font-size:16px;line-height:2.1;color:var(--body);margin:0 0 20px}
+  .content b{color:var(--accent)}
+  .content ul{margin:0 0 22px;padding-left:26px}
+  .content li{font-size:15.5px;line-height:2;color:var(--body);margin-bottom:10px}
+  .content li b{color:var(--accent)}
+  .callout{background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:16px;
+    padding:18px 22px;margin:0 0 22px;font-size:15px;line-height:2;color:var(--body)}
+  .pager{display:flex;justify-content:space-between;gap:14px;margin-top:64px;padding-top:28px;
+    border-top:1px solid var(--border);flex-wrap:wrap}
+  .pager a{flex:1;min-width:220px;text-decoration:none;background:rgba(255,255,255,.75);border:1px solid var(--border);
+    border-radius:16px;padding:16px 20px;box-shadow:var(--shadow);transition:transform .25s,box-shadow .25s}
+  .pager a:hover{transform:translateY(-4px);box-shadow:0 18px 40px rgba(37,99,235,.2)}
+  .pager .dir{font-size:12px;color:var(--muted);letter-spacing:2px}
+  .pager .pt{font-weight:900;color:#1d4ed8;font-size:15px;margin-top:4px}
+  footer{position:relative;z-index:1;text-align:center;padding:26px 20px 42px;color:#6b87a8;font-size:13px}
+  footer b{font-style:italic;color:#1d4ed8}
+  @media (max-width:640px){.pager .next{display:none}.pager a{flex:none;width:100%}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="back" href="/">← 返回首页</a>
+  <a class="brand" href="/#tech">SKY DUEL · 技术专栏</a>
+</div>
+<div class="wrap">
+  <div class="kicker">UNDER THE HOOD · 04</div>
+  <h1>一颗子弹的一生：从枪口到房主的一纸裁决</h1>
+  <div class="meta">《苍穹对决》技术专栏 · 命中判定篇 · 约 1900 字 · 阅读 6 分钟</div>
+  <div class="content">
+    <p>前三篇讲的是"路怎么修通"、"谁说了算"、"晚了怎么补"。但玩家真正会拍桌子的只有一件事：<b>我明明打中了，为什么不算？</b>这篇把一颗子弹拆开，从枪口 880 m/s 到房主的一纸裁决，看清楚中间到底过了几道手。</p>
+
+    <h2>一、为什么不做"点哪打哪"的射线枪</h2>
+    <p>绝大多数射击游戏用的是 <b>hitscan</b>：扣下扳机的瞬间，从枪口发一条射线，撞到谁就是谁。它便宜、精确、没有飞行时间，也就没有"打提前量"这回事。</p>
+    <p>但空战不行。800m 外一架以 100 m/s 横移的飞机，子弹飞过去要将近一秒——这一秒的提前量，正是狗斗的全部技术含量。用射线枪等于把这个维度直接删掉：只要准星压住，按下去就中，缠斗立刻退化成"谁先看到谁"。所以《苍穹对决》用真实弹道：<b>子弹是世界里一个会飞的实体</b>，每帧推进、每帧判交、打空了就坠海。</p>
+
+    <h2>二、弹道：两个公式，三个力</h2>
+    <p>出膛速度不是一个常数，而是<b>枪口初速 880 m/s + 载机当前速度矢量</b>。俯冲时子弹更快、拉起时更慢、侧飞时弹道会往侧面偏——这不是特技，是矢量加法。所以"前进中下射""后退时前射"用的是同一套公式，不需要任何分支。</p>
+    <p>之后每一帧只做两件事：</p>
+    <ul>
+      <li><b>二次空气阻力</b>：v ← v / (1 + 3.6e-4 · |v| · dt)。系数不是拍的，是按 30mm 机炮的质量、迎风面积、阻力系数算出来的。</li>
+      <li><b>重力</b>：v.y -= 9.8 · dt。</li>
+    </ul>
+    <p>结果就是玩家熟悉的那些手感：600m 处速度剩 81%、下坠约 2.3m；向上爬升时子弹"更飘"，俯冲时"更直"。这些都不是 UI 提示，是算出来的。</p>
+
+    <h2>三、伤害：为什么远距离打不动</h2>
+    <p>伤害不按距离线性衰减，而<b>按着速的平方</b>——动能 ∝ v²。600m 剩 81% 速度，伤害就只剩 65%。再往下还有一个 <b>0.35 的下限</b>：没有它，2km 外一发子弹只剩 3% 伤害，双方会陷入互相挠痒的僵局；有了它，远距离依然是"能打疼、但打不死"。</p>
+
+    <h2>四、命中判定：把飞机拆成几个球</h2>
+    <p>飞机在判定层不是一张精细网格，而是<b>四个球</b>：机身、机翼（左右各一）、发动机、驾驶舱。每帧把"上一帧位置 → 这一帧位置"连成线段，对所有球做线段-球求交，<b>取最先命中的那个</b>——先打到谁，就报谁。</p>
+    <p>这几个球做两件事：<b>告诉你打中了哪儿</b>，并带着这块地方的<b>装甲厚度与结构值</b>。子弹先比穿深：穿深 = 弹头基准穿深 × √速度衰减（机炮 30mm、高射机枪 20mm、霰弹 12mm），穿深不够就是零伤害——只有火星，没有扣血。打穿之后才按装甲折算伤害，并把这笔伤害记在部位自己的结构值上。</p>
+    <p>结构值归零不是"多掉一点血"，而是这块功能直接报废：<b>驾驶舱</b>飞行员阵亡（飞机随即失控坠落，撞地才爆炸）、<b>发动机</b>失去动力、<b>机翼</b>转向变慢（断两翼空中解体）、<b>尾梁</b>尾桨失效持续自旋、<b>弹药箱</b>殉爆、<b>炮塔</b>卡死。界面只报部位名，不显示任何倍率数字——深度留在判定里，屏幕保持干净。</p>
+    <p>还有一个容易踩的坑：机身 / 车体这种"整个外壳"的球会把这些要害球包在里面，如果按"最近命中"去比，要害永远输给外壳。所以机身、车体被标成 <b>fallback</b> —— 不参加竞争，只在前面的小部位都没命中时兜底。</p>
+    <p>为什么是球？两个原因。第一，球求交是闭式解，几十架飞机、上百发子弹同时算也不掉帧；第二，高速目标下玩家对"判定松紧"的感知远比对"外形精确"敏感——你能接受擦着机翼算命中，不能接受穿模漏判。<b>线段而不是点</b>这一点尤其关键：子弹一帧能飞十几米，用点判交会直接穿过机身。</p>
+
+    <h2>五、客户端先判，房主复核</h2>
+    <p>命中在本地立即生效：扣血、火花、音效，零等待。同时发一条 <b>hitRep</b> 给房主。房主不信"我打中了"，只信两件事：你的状态够不够新、目标当时在不在弹道上。</p>
+    <ul>
+      <li>飞机状态过期超过 <b>350ms</b>、防空车超过 <b>400ms</b> 的开火，跳过判定（阈值差异来自机动性：飞机 350ms 能飞出好几个机身，炮塔不能）。</li>
+      <li>同一发子弹（fid）只结算一次，房主用 hitSettled 表去重。</li>
+      <li>裁定不通过 → 下发 <b>dmgReject</b>，本地把预判扣的血补回去。</li>
+    </ul>
+    <p>所以你偶尔会看到"命中特效出来了、血条又弹回去"——那不是 bug，是房主在改作业。改得快、改得小，玩家就当没看见。</p>
+
+    <h2>六、坦克：装甲、跳弹与三个"特异功能"</h2>
+    <p>坦克不走"球 + 伤害"，而是<b>穿深 vs 装甲</b>。弹芯 4.6kg、出膛 1670 m/s，穿深 <b>P = 420 · √(ke/ke0)</b>——780m 处仍有 403mm。每个部位有各自的厚度：</p>
+    <ul>
+      <li><b>炮塔 380mm</b>：正面最厚，30° 着角就开始跳弹；</li>
+      <li><b>车体 260mm</b>：正面能穿，但也怕角度；</li>
+      <li><b>弹药箱 120mm</b>：打穿直接殉爆；</li>
+      <li><b>发动机 75mm / 履带 45mm</b>：一打就穿，但伤害不高——代价是你动不了了。</li>
+    </ul>
+    <p>有效装甲 = 厚度 ÷ cos(着角)：斜着打，装甲成倍变厚；着角超过 <b>72°</b> 直接跳弹。穿深大于有效装甲才算击穿，击穿后 <b>26~40 点</b>伤害（富余越多打得越狠）；车体 100 点装甲，约 3 发击毁。打不穿就是打不穿——只有火星和一声跳弹。</p>
+    <p>真正改变战局的是三个特殊部位：打穿<b>履带或发动机</b>，车当场失去动力，本回合只能停在原地当靶子（HUD 常驻"履带断裂 / 发动机损毁"）；打穿<b>弹药箱</b>，整车殉爆，<b>22m 内的所有单位按距离吃 6~62 点伤害</b>——停在旁边的队友也会被一起带走。</p>
+    <p>打穿木墙仍按 2MJ/m³ 扣能量——一堵墙大约 0.25kJ，对比 6.42MJ 等于白送。所以"隔着一间木屋把对面打穿"是物理上成立的，不是穿模。</p>
+
+    <h2>七、判定的边界</h2>
+    <p>这套系统有一套明确的"不判"清单：子弹打不爆火箭与炸弹（没有空中拦截）、爆炸不会连锁引爆其他弹药、火箭对队友没有近炸引信只认实碰。每一条都在减少"两台设备算出两个结果"的可能性。</p>
+    <p><b>能复算的东西才做判定</b>，是整套设计的第一性原则。凡是依赖"对方意图"或"实时权威"的结果，一律推给房主；凡是确定性物理（撞地、撞海、弹道下坠），本地算一万次也是同一个答案。</p>
+
+    <div class="callout">玩家不需要知道 3.6e-4 和 72°。但他能感觉到：远距离打不动、正面硬啃会跳弹、绕后打弹药箱直接殉爆、履带一断就只能挨打。这些"直觉"背后是一条条能被复算的公式——<b>判定可解释，争议才会少</b>。下一篇《弱网生存手册》，讲另一面：当包丢了、抖动上来了，这套判定怎么不崩。</div>
+  </div>
+  <div class="pager">
+    <a href="/articles/prediction/" class="prev"><div class="dir">← 上一篇</div><div class="pt">本地预判 + 权威回溯：高延迟也能指哪打哪</div></a>
+    <a href="/articles/netcode/" class="next"><div class="dir">下一篇 →</div><div class="pt">弱网生存手册：丢包、抖动与那道 150ms 门槛</div></a>
+  </div>
+</div>
+<footer><b>SKY DUEL</b> · 苍穹对决 — 纯前端 3D 空战网页游戏 · 技术专栏</footer>
+</body>
+</html>

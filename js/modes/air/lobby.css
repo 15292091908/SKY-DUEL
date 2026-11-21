@@ -1,0 +1,14 @@
+/* js/modes/air/lobby.css —— 本模式的大厅皮肤（切到本模式时由 mode.js 动态注入）
+   只作用于 #menu[data-mode="dogfight"]，不会污染其它模式。 */
+#menu[data-mode="dogfight"]{ --gm-accent:#2563eb; --gm-accent-soft:#2563eb22; --gm-accent-line:#2563eb66; }
+#menu[data-mode="dogfight"] .gmPill.on{
+  color:#2563eb;
+  border-color:var(--gm-accent-line);
+  box-shadow:0 8px 22px #2563eb2e;
+}
+#menu[data-mode="dogfight"] .bigPill:hover{ border-color:var(--gm-accent-line); }
+#menu[data-mode="dogfight"] .zoomInfo{ color:#2563eb; }
+#menu[data-mode="dogfight"] .menuGmBar::after{
+  content:""; position:absolute; left:50%; bottom:-7px; width:46px; height:3px; border-radius:2px;
+  transform:translateX(-50%); background:var(--gm-accent); opacity:.75;
+}
